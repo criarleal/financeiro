@@ -353,39 +353,40 @@
       </div>
 
       <!-- Barra de Filtros e Busca -->
-      <div class="card-lux p-4 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+      <div class="card-lux p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
           <!-- Input Busca -->
-          <div class="relative flex-1 min-w-[200px]">
+          <div class="relative flex-1 w-full">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
             <input type="text" id="search-atendimentos" placeholder="Buscar por cliente ou serviço..." class="lux-input w-full pl-9 text-xs">
           </div>
 
-          <!-- Filtro Status -->
-          <select id="filter-status" class="lux-input text-xs cursor-pointer">
-            <option value="all">Todos os Status</option>
-            <option value="concluído">Concluídos</option>
-            <option value="pendente">Pendentes (A Receber)</option>
-            <option value="cancelado">Cancelados</option>
-          </select>
+          <!-- Filtro Status e Forma de Pagamento em grid 2 colunas no celular -->
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <select id="filter-status" class="lux-input text-xs cursor-pointer w-full">
+              <option value="all">Todos os Status</option>
+              <option value="concluído">Concluídos</option>
+              <option value="pendente">Pendentes (A Receber)</option>
+              <option value="cancelado">Cancelados</option>
+            </select>
 
-          <!-- Filtro Forma de Pagamento -->
-          <select id="filter-payment" class="lux-input text-xs cursor-pointer">
-            <option value="all">Todas as Formas</option>
-            <option value="pix">Pix</option>
-            <option value="crédito">Crédito</option>
-            <option value="débito">Débito</option>
-            <option value="dinheiro">Dinheiro</option>
-          </select>
+            <select id="filter-payment" class="lux-input text-xs cursor-pointer w-full">
+              <option value="all">Todas as Formas</option>
+              <option value="pix">Pix</option>
+              <option value="crédito">Crédito</option>
+              <option value="débito">Débito</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
         </div>
 
-        <button onclick="exportDataCSV()" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition flex items-center gap-2">
+        <button onclick="exportDataCSV()" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition flex items-center justify-center gap-2 w-full md:w-auto">
           <i class="fa-solid fa-file-csv"></i> Baixar CSV
         </button>
       </div>
 
-      <!-- Tabela Luxo de Atendimentos -->
-      <div class="card-lux overflow-hidden">
+      <!-- Modo Desktop: Tabela Luxo de Atendimentos -->
+      <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
@@ -408,6 +409,11 @@
         </div>
       </div>
 
+      <!-- Modo Mobile: Cards de Atendimentos (Sem rolagem lateral) -->
+      <div id="cards-atendimentos" class="space-y-3 md:hidden">
+        <!-- Renderizado via app.js -->
+      </div>
+
     </div>
 
     <!-- ==================================================================
@@ -427,7 +433,8 @@
         </button>
       </div>
 
-      <div class="card-lux overflow-hidden">
+      <!-- Modo Desktop: Tabela de Despesas -->
+      <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
@@ -445,6 +452,11 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Modo Mobile: Cards de Despesas (Sem rolagem lateral) -->
+      <div id="cards-despesas" class="space-y-3 md:hidden">
+        <!-- Renderizado via app.js -->
       </div>
     </div>
 
@@ -465,7 +477,8 @@
         </button>
       </div>
 
-      <div class="card-lux overflow-hidden">
+      <!-- Modo Desktop: Tabela de Receitas Extras -->
+      <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
@@ -483,6 +496,11 @@
           </table>
         </div>
       </div>
+
+      <!-- Modo Mobile: Cards de Receitas Extras (Sem rolagem lateral) -->
+      <div id="cards-outros" class="space-y-3 md:hidden">
+        <!-- Renderizado via app.js -->
+      </div>
     </div>
 
     <!-- ==================================================================
@@ -497,17 +515,18 @@
           <h2 class="text-2xl font-bold text-gray-900 serif">Finanças Pessoais & Pró-labore</h2>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button onclick="openModal('modal-pro-labore')" class="gold-button px-4 py-2 rounded-full text-xs flex items-center gap-2">
-            <i class="fa-solid fa-hand-holding-dollar"></i> Retirar Pró-labore
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openModal('modal-pro-labore')" class="gold-button px-3.5 py-2 rounded-full text-xs flex items-center gap-1.5 flex-1 sm:flex-none justify-center">
+            <i class="fa-solid fa-hand-holding-dollar"></i> Pró-labore
           </button>
-          <button onclick="openNewPessoal()" class="rose-button px-4 py-2 rounded-full text-xs flex items-center gap-2">
-            <i class="fa-solid fa-plus"></i> Novo Gasto Pessoal
+          <button onclick="openNewPessoal()" class="rose-button px-3.5 py-2 rounded-full text-xs flex items-center gap-1.5 flex-1 sm:flex-none justify-center">
+            <i class="fa-solid fa-plus"></i> Novo Gasto
           </button>
         </div>
       </div>
 
-      <div class="card-lux overflow-hidden">
+      <!-- Modo Desktop: Tabela de Finanças Pessoais -->
+      <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
@@ -525,6 +544,11 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Modo Mobile: Cards de Finanças Pessoais (Sem rolagem lateral) -->
+      <div id="cards-pessoal" class="space-y-3 md:hidden">
+        <!-- Renderizado via app.js -->
       </div>
     </div>
 
@@ -796,8 +820,8 @@
   </div>
 
   <!-- Modal 2: Nova Despesa -->
-  <div id="modal-nova-despesa" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+  <div id="modal-nova-despesa" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-black/5 animate-fade-in max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
         <h3 id="modal-desp-title" class="serif text-xl font-bold text-gray-900">Nova Despesa da Empresa</h3>
         <button onclick="closeModal('modal-nova-despesa')" class="text-gray-400 hover:text-gray-600">
@@ -870,8 +894,8 @@
   </div>
 
   <!-- Modal 3: Retirada de Pró-labore -->
-  <div id="modal-pro-labore" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+  <div id="modal-pro-labore" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-black/5 animate-fade-in max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
         <div>
           <span class="text-[10px] uppercase font-bold text-[#C5A059] tracking-widest block">Transferência PJ → PF</span>
@@ -911,8 +935,8 @@
   </div>
 
   <!-- Modal 4: Nova Receita Extra -->
-  <div id="modal-nova-receita-extra" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+  <div id="modal-nova-receita-extra" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-black/5 animate-fade-in max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
         <h3 id="modal-extra-title" class="serif text-xl font-bold text-gray-900">Nova Receita Extra</h3>
         <button onclick="closeModal('modal-nova-receita-extra')" class="text-gray-400 hover:text-gray-600">
@@ -951,8 +975,8 @@
   </div>
 
   <!-- Modal 5: Novo Lançamento Pessoal -->
-  <div id="modal-novo-pessoal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+  <div id="modal-novo-pessoal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-black/5 animate-fade-in max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
         <h3 id="modal-pess-title" class="serif text-xl font-bold text-gray-900">Lançamento Pessoal (PF)</h3>
         <button onclick="closeModal('modal-novo-pessoal')" class="text-gray-400 hover:text-gray-600">

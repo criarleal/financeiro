@@ -490,10 +490,11 @@ function setText(id, text) {
   if (el) el.innerText = text;
 }
 
-// Renderiza a Tabela de Atendimentos
+// Renderiza a Tabela e os Cards Mobile de Atendimentos
 function renderAtendimentosTable() {
   const tbody = document.getElementById('tbody-atendimentos');
-  if (!tbody) return;
+  const cards = document.getElementById('cards-atendimentos');
+  if (!tbody && !cards) return;
 
   let list = filterByPeriod(state.data.atendimentos || []);
 
@@ -515,150 +516,344 @@ function renderAtendimentosTable() {
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 font-light">Nenhum atendimento encontrado para o período ou filtro selecionado.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 font-light">Nenhum atendimento encontrado para o período ou filtro selecionado.</td></tr>`;
+    if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhum atendimento encontrado para o período ou filtro selecionado.</div>`;
     return;
   }
 
-  tbody.innerHTML = list.map((a, idx) => {
-    const dataFmt = formatDateBR(a.data);
-    const badgeStatus = a.situacao === 'Concluído' 
-      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Concluído</span>'
-      : a.situacao === 'Pendente'
-      ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
-      : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = list.map((a, idx) => {
+      const dataFmt = formatDateBR(a.data);
+      const badgeStatus = a.situacao === 'Concluído' 
+        ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Concluído</span>'
+        : a.situacao === 'Pendente'
+        ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
+        : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
 
-    return `
-      <tr class="transition-colors hover:bg-rose-50/20">
-        <td class="font-medium text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
-        <td class="font-semibold text-gray-800">${a.cliente}</td>
-        <td class="text-gray-700 font-medium">${a.servico}</td>
-        <td class="font-bold text-gray-900">${formatBRL(a.valorTotal)}</td>
-        <td class="text-xs text-gray-600">
-          ${a.sinal > 0 ? `<span class="badge-gold px-2 py-0.5 rounded font-medium text-[11px] block w-fit mb-0.5">Sinal: ${formatBRL(a.sinal)}</span>` : ''}
-          <span>Restante: ${formatBRL(a.restante)}</span>
-        </td>
-        <td class="font-medium ${a.aReceber > 0 ? 'text-amber-600 font-bold' : 'text-gray-400'}">${formatBRL(a.aReceber)}</td>
-        <td class="text-xs text-gray-600">
-          <span class="inline-block px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">${a.formaPagamento}</span>
-          ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-[10px] text-gray-400 block mt-0.5">${a.parcelas}</span>` : ''}
-        </td>
-        <td>${badgeStatus}</td>
-        <td class="text-right whitespace-nowrap">
-          <button onclick="openEditAtendimento(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-          <button onclick="deleteItem('Atendimentos', ${a._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
-            <i class="fa-regular fa-trash-can"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr class="transition-colors hover:bg-rose-50/20">
+          <td class="font-medium text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
+          <td class="font-semibold text-gray-800">${a.cliente}</td>
+          <td class="text-gray-700 font-medium">${a.servico}</td>
+          <td class="font-bold text-gray-900">${formatBRL(a.valorTotal)}</td>
+          <td class="text-xs text-gray-600">
+            ${a.sinal > 0 ? `<span class="badge-gold px-2 py-0.5 rounded font-medium text-[11px] block w-fit mb-0.5">Sinal: ${formatBRL(a.sinal)}</span>` : ''}
+            <span>Restante: ${formatBRL(a.restante)}</span>
+          </td>
+          <td class="font-medium ${a.aReceber > 0 ? 'text-amber-600 font-bold' : 'text-gray-400'}">${formatBRL(a.aReceber)}</td>
+          <td class="text-xs text-gray-600">
+            <span class="inline-block px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">${a.formaPagamento}</span>
+            ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-[10px] text-gray-400 block mt-0.5">${a.parcelas}</span>` : ''}
+          </td>
+          <td>${badgeStatus}</td>
+          <td class="text-right whitespace-nowrap">
+            <button onclick="openEditAtendimento(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteItem('Atendimentos', ${a._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Cards Mobile Exclusivos (Sem rolagem lateral)
+  if (cards) {
+    cards.innerHTML = list.map((a, idx) => {
+      const dataFmt = formatDateBR(a.data);
+      const badgeStatus = a.situacao === 'Concluído' 
+        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Concluído</span>'
+        : a.situacao === 'Pendente'
+        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
+        : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
+
+      return `
+        <div class="card-lux mobile-card p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+              <h4 class="font-bold text-gray-900 text-sm mt-0.5 leading-snug">${a.cliente}</h4>
+            </div>
+            <div>${badgeStatus}</div>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs text-gray-700 bg-stone-50 px-3 py-1.5 rounded-xl border border-black/5">
+            <i class="fa-solid fa-sparkles text-[#C5A059] text-[10px]"></i>
+            <span class="font-medium">${a.servico}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-stone-50/80 p-2.5 rounded-xl border border-black/5">
+              <span class="text-[10px] text-gray-400 uppercase font-semibold block">Valor Total</span>
+              <span class="font-bold text-gray-900 text-sm">${formatBRL(a.valorTotal)}</span>
+            </div>
+            <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
+              <span class="text-[10px] text-emerald-700 uppercase font-semibold block">Recebido</span>
+              <span class="font-bold text-emerald-700 text-sm">${formatBRL(a.recebido)}</span>
+              ${a.sinal > 0 ? `<span class="text-[10px] text-amber-700 block font-medium">(Sinal ${formatBRL(a.sinal)})</span>` : ''}
+            </div>
+          </div>
+
+          ${a.aReceber > 0 ? `
+            <div class="flex items-center justify-between text-xs bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+              <span class="font-semibold text-amber-800">A Receber:</span>
+              <span class="font-bold text-amber-800">${formatBRL(a.aReceber)}</span>
+            </div>
+          ` : ''}
+
+          <div class="flex items-center justify-between pt-2 border-t border-black/5 text-xs">
+            <div class="text-gray-500 text-[11px]">
+              <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">${a.formaPagamento}</span>
+              ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-gray-400 ml-1">(${a.parcelas})</span>` : ''}
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openEditAtendimento(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+                <i class="fa-regular fa-pen-to-square"></i> Editar
+              </button>
+              <button onclick="deleteItem('Atendimentos', ${a._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
-// Renderiza a Tabela de Despesas da Empresa
+// Renderiza a Tabela e os Cards Mobile de Despesas da Empresa
 function renderDespesasTable() {
   const tbody = document.getElementById('tbody-despesas');
-  if (!tbody) return;
+  const cards = document.getElementById('cards-despesas');
+  if (!tbody && !cards) return;
 
   const list = filterByPeriod(state.data.despesas || []);
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-light">Nenhuma despesa registrada para este período.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-light">Nenhuma despesa registrada para este período.</td></tr>`;
+    if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma despesa registrada para este período.</div>`;
     return;
   }
 
-  tbody.innerHTML = list.map((d, idx) => {
-    const dataFmt = formatDateBR(d.data);
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = list.map((d, idx) => {
+      const dataFmt = formatDateBR(d.data);
 
-    return `
-      <tr class="hover:bg-rose-50/20 transition-colors">
-        <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
-        <td><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700">${d.categoria}</span></td>
-        <td class="text-gray-800 font-medium">${d.descricao}</td>
-        <td class="font-bold text-rose-600">${formatBRL(d.valor)}</td>
-        <td class="text-xs text-gray-600">${d.formaPagamento} ${d.parcelas && d.parcelas !== 'À vista' ? `(${d.parcelas})` : ''}</td>
-        <td class="text-right whitespace-nowrap">
-          <button onclick="openEditDespesa(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Despesa">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-          <button onclick="deleteItem('Despesas', ${d._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
-            <i class="fa-regular fa-trash-can"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr class="hover:bg-rose-50/20 transition-colors">
+          <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
+          <td><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700">${d.categoria}</span></td>
+          <td class="text-gray-800 font-medium">${d.descricao}</td>
+          <td class="font-bold text-rose-600">${formatBRL(d.valor)}</td>
+          <td class="text-xs text-gray-600">${d.formaPagamento} ${d.parcelas && d.parcelas !== 'À vista' ? `(${d.parcelas})` : ''}</td>
+          <td class="text-right whitespace-nowrap">
+            <button onclick="openEditDespesa(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Despesa">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteItem('Despesas', ${d._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Cards Mobile
+  if (cards) {
+    cards.innerHTML = list.map((d, idx) => {
+      const dataFmt = formatDateBR(d.data);
+
+      return `
+        <div class="card-lux mobile-card p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${d.descricao}</h4>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-700 whitespace-nowrap">${d.categoria}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <span class="text-[10px] text-gray-400 uppercase font-semibold block">Valor Pago</span>
+              <span class="font-bold text-rose-600 text-base">${formatBRL(d.valor)}</span>
+            </div>
+            <div class="text-right text-xs text-gray-500 font-medium">
+              <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-700">${d.formaPagamento}</span>
+              ${d.parcelas && d.parcelas !== 'À vista' ? `<span class="text-gray-400 block text-[10px] mt-0.5">${d.parcelas}</span>` : ''}
+            </div>
+          </div>
+
+          ${d.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5 italic">${d.observacoes}</p>` : ''}
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+            <button onclick="openEditDespesa(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+              <i class="fa-regular fa-pen-to-square"></i> Editar
+            </button>
+            <button onclick="deleteItem('Despesas', ${d._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
-// Renderiza a Tabela de Receitas Extras / Avulsas
+// Renderiza a Tabela e os Cards Mobile de Receitas Extras / Avulsas
 function renderOutrosTable() {
   const tbody = document.getElementById('tbody-outros');
-  if (!tbody) return;
+  const cards = document.getElementById('cards-outros');
+  if (!tbody && !cards) return;
 
   const list = filterByPeriod(state.data.outros || []);
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 font-light">Nenhuma receita extra registrada para este período.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 font-light">Nenhuma receita extra registrada para este período.</td></tr>`;
+    if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma receita extra registrada para este período.</div>`;
     return;
   }
 
-  tbody.innerHTML = list.map((o, idx) => {
-    const dataFmt = formatDateBR(o.data);
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = list.map((o, idx) => {
+      const dataFmt = formatDateBR(o.data);
 
-    return `
-      <tr class="hover:bg-rose-50/20 transition-colors">
-        <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
-        <td class="font-medium text-gray-800">${o.descricao}</td>
-        <td class="font-bold text-emerald-600">${formatBRL(o.valor)}</td>
-        <td class="text-xs text-gray-500">${o.observacoes}</td>
-        <td class="text-right whitespace-nowrap">
-          <button onclick="openEditReceitaExtra(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Receita Extra">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-          <button onclick="deleteItem('Outros', ${o._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
-            <i class="fa-regular fa-trash-can"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr class="hover:bg-rose-50/20 transition-colors">
+          <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
+          <td class="font-medium text-gray-800">${o.descricao}</td>
+          <td class="font-bold text-emerald-600">${formatBRL(o.valor)}</td>
+          <td class="text-xs text-gray-500">${o.observacoes}</td>
+          <td class="text-right whitespace-nowrap">
+            <button onclick="openEditReceitaExtra(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Receita Extra">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteItem('Outros', ${o._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Cards Mobile
+  if (cards) {
+    cards.innerHTML = list.map((o, idx) => {
+      const dataFmt = formatDateBR(o.data);
+
+      return `
+        <div class="card-lux mobile-card p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${o.descricao}</h4>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-gray-400 uppercase font-semibold block">Valor Recebido</span>
+              <span class="font-bold text-emerald-600 text-base">${formatBRL(o.valor)}</span>
+            </div>
+          </div>
+
+          ${o.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5">${o.observacoes}</p>` : ''}
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+            <button onclick="openEditReceitaExtra(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+              <i class="fa-regular fa-pen-to-square"></i> Editar
+            </button>
+            <button onclick="deleteItem('Outros', ${o._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
-// Renderiza a Tabela de Finanças Pessoais
+// Renderiza a Tabela e os Cards Mobile de Finanças Pessoais
 function renderPessoalTable() {
   const tbody = document.getElementById('tbody-pessoal');
-  if (!tbody) return;
+  const cards = document.getElementById('cards-pessoal');
+  if (!tbody && !cards) return;
 
   const list = filterByPeriod(state.data.pessoal || []);
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 font-light">Nenhum lançamento pessoal registrado para este período.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 font-light">Nenhum lançamento pessoal registrado para este período.</td></tr>`;
+    if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhum lançamento pessoal registrado para este período.</div>`;
     return;
   }
 
-  tbody.innerHTML = list.map((p, idx) => {
-    const dataFmt = formatDateBR(p.data);
-    const isReceita = (p.tipo || '').toLowerCase() === 'receita';
-    const badgeTipo = isReceita
-      ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
-      : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = list.map((p, idx) => {
+      const dataFmt = formatDateBR(p.data);
+      const isReceita = (p.tipo || '').toLowerCase() === 'receita';
+      const badgeTipo = isReceita
+        ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
+        : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
 
-    return `
-      <tr class="hover:bg-rose-50/20 transition-colors">
-        <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
-        <td>${badgeTipo}</td>
-        <td><span class="text-xs font-medium text-gray-600">${p.categoria}</span></td>
-        <td class="font-medium text-gray-800">${p.descricao}</td>
-        <td class="font-bold ${isReceita ? 'text-emerald-600' : 'text-gray-800'}">${formatBRL(p.valor)}</td>
-        <td class="text-right whitespace-nowrap">
-          <button onclick="openEditPessoal(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Lançamento Pessoal">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-          <button onclick="deleteItem('Pessoal', ${p._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
-            <i class="fa-regular fa-trash-can"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr class="hover:bg-rose-50/20 transition-colors">
+          <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
+          <td>${badgeTipo}</td>
+          <td><span class="text-xs font-medium text-gray-600">${p.categoria}</span></td>
+          <td class="font-medium text-gray-800">${p.descricao}</td>
+          <td class="font-bold ${isReceita ? 'text-emerald-600' : 'text-gray-800'}">${formatBRL(p.valor)}</td>
+          <td class="text-right whitespace-nowrap">
+            <button onclick="openEditPessoal(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Lançamento Pessoal">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteItem('Pessoal', ${p._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Cards Mobile
+  if (cards) {
+    cards.innerHTML = list.map((p, idx) => {
+      const dataFmt = formatDateBR(p.data);
+      const isReceita = (p.tipo || '').toLowerCase() === 'receita';
+      const badgeTipo = isReceita
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
+        : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
+
+      return `
+        <div class="card-lux mobile-card p-4 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${p.descricao}</h4>
+              <span class="text-xs text-gray-500 font-medium">${p.categoria}</span>
+            </div>
+            <div class="text-right">
+              ${badgeTipo}
+              <span class="font-bold ${isReceita ? 'text-emerald-600' : 'text-gray-800'} text-base block mt-1">${formatBRL(p.valor)}</span>
+            </div>
+          </div>
+
+          ${p.observacoes ? `<p class="text-xs text-gray-400 italic bg-stone-50 p-2 rounded-lg border border-black/5">${p.observacoes}</p>` : ''}
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+            <button onclick="openEditPessoal(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+              <i class="fa-regular fa-pen-to-square"></i> Editar
+            </button>
+            <button onclick="deleteItem('Pessoal', ${p._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 }
 
 // Renderiza Metas e Planejamento
@@ -1242,7 +1437,7 @@ async function submitProLabore(event) {
   saveLocalCache();
   closeModal('modal-pro-labore');
   renderAll();
-  showToast(`Pr?-labore de ${formatBRL(valor)} transferido com sucesso!`);
+  showToast(`Pró-labore de ${formatBRL(valor)} transferido com sucesso!`);
 
   if (state.apiUrl) {
     callGasApi('retiradaProLabore', rawItem);
@@ -1385,17 +1580,17 @@ function updateSyncBadge(status) {
   if (!badge) return;
 
   if (status === 'connected') {
-    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 pulse-green"></span> Conectado ao Google Sheets';
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Conectado ao Google Sheets</span><span class="sm:hidden text-[11px]">Online</span>';
   } else if (status === 'syncing') {
-    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
-    badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Sincronizando...';
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
+    badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span class="hidden sm:inline">Sincronizando...</span><span class="sm:hidden text-[11px]">Sync...</span>';
   } else if (status === 'error') {
-    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 cursor-pointer';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-2"></span> Erro de Conexão (Verificar API)';
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 cursor-pointer';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 sm:mr-2"></span> <span class="hidden sm:inline">Erro de Conexão (Verificar API)</span><span class="sm:hidden text-[11px]">Offline</span>';
   } else {
-    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200 cursor-pointer';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Demonstração (Local)';
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200 cursor-pointer';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-1.5 sm:mr-2"></span> <span class="hidden sm:inline">Modo Demonstração (Local)</span><span class="sm:hidden text-[11px]">Demo</span>';
   }
 }
 
