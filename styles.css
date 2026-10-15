@@ -259,3 +259,8 @@ h1, h2, h3, h4, .serif {
     border-radius: 1rem;
   }
 }
+
+/* Suporte a Safe Area Inset no iOS (Notch / Dynamic Island em modo Atalho) */
+header {
+  padding-top: max(0.875rem, env(safe-area-inset-top));
+}
