@@ -1,0 +1,653 @@
+{
+  "atendimentos": [
+    {
+      "_rowIndex": 2,
+      "Data": "2026-10-01",
+      "Cliente (opcional)": "Cliente 01",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 0.0,
+      "A receber": 55.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "3x",
+      "Situação": "Pendente"
+    },
+    {
+      "_rowIndex": 3,
+      "Data": "2026-10-02",
+      "Cliente (opcional)": "Cliente 02",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 4,
+      "Data": "2026-10-03",
+      "Cliente (opcional)": "Cliente 03",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 5,
+      "Data": "2026-10-04",
+      "Cliente (opcional)": "Cliente 04",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 115.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "2x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 6,
+      "Data": "2026-10-05",
+      "Cliente (opcional)": "Cliente 05",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 160.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 7,
+      "Data": "2026-10-06",
+      "Cliente (opcional)": "Cliente 06",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 8,
+      "Data": "2026-10-07",
+      "Cliente (opcional)": "Cliente 07",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 25.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "1x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 9,
+      "Data": "2026-10-08",
+      "Cliente (opcional)": "Cliente 08",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 10,
+      "Data": "2026-10-09",
+      "Cliente (opcional)": "Cliente 09",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 11,
+      "Data": "2026-10-10",
+      "Cliente (opcional)": "Cliente 10",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 115.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "4x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 12,
+      "Data": "2026-10-11",
+      "Cliente (opcional)": "Cliente 11",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 190.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 13,
+      "Data": "2026-10-12",
+      "Cliente (opcional)": "Cliente 12",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 0.0,
+      "A receber": 70.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Pendente"
+    },
+    {
+      "_rowIndex": 14,
+      "Data": "2026-10-13",
+      "Cliente (opcional)": "Cliente 13",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 25.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "3x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 15,
+      "Data": "2026-10-14",
+      "Cliente (opcional)": "Cliente 14",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 16,
+      "Data": "2026-10-15",
+      "Cliente (opcional)": "Cliente 15",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 17,
+      "Data": "2026-10-01",
+      "Cliente (opcional)": "Cliente 16",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 145.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "2x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 18,
+      "Data": "2026-10-02",
+      "Cliente (opcional)": "Cliente 17",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 160.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 19,
+      "Data": "2026-10-03",
+      "Cliente (opcional)": "Cliente 18",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 70.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 20,
+      "Data": "2026-10-04",
+      "Cliente (opcional)": "Cliente 19",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 25.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "1x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 21,
+      "Data": "2026-10-05",
+      "Cliente (opcional)": "Cliente 20",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 22,
+      "Data": "2026-10-06",
+      "Cliente (opcional)": "Cliente 21",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 130.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 23,
+      "Data": "2026-10-07",
+      "Cliente (opcional)": "Cliente 22",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 115.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "4x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 24,
+      "Data": "2026-10-08",
+      "Cliente (opcional)": "Cliente 23",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 0.0,
+      "A receber": 160.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Pendente"
+    },
+    {
+      "_rowIndex": 25,
+      "Data": "2026-10-09",
+      "Cliente (opcional)": "Cliente 24",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 70.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 26,
+      "Data": "2026-10-10",
+      "Cliente (opcional)": "Cliente 25",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 25.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "3x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 27,
+      "Data": "2026-10-11",
+      "Cliente (opcional)": "Cliente 26",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 75.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 28,
+      "Data": "2026-10-12",
+      "Cliente (opcional)": "Cliente 27",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 29,
+      "Data": "2026-10-13",
+      "Cliente (opcional)": "Cliente 28",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 115.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "2x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 30,
+      "Data": "2026-10-14",
+      "Cliente (opcional)": "Cliente 29",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 160.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 31,
+      "Data": "2026-10-15",
+      "Cliente (opcional)": "Cliente 30",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 70.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 32,
+      "Data": "2026-10-01",
+      "Cliente (opcional)": "Cliente 31",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 55.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "1x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 33,
+      "Data": "2026-10-02",
+      "Cliente (opcional)": "Cliente 32",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 34,
+      "Data": "2026-10-03",
+      "Cliente (opcional)": "Cliente 33",
+      "Serviço": "Lash lifting",
+      "Valor total": 130.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 35,
+      "Data": "2026-10-04",
+      "Cliente (opcional)": "Cliente 34",
+      "Serviço": "Brow lamination",
+      "Valor total": 145.0,
+      "Recebido": 0.0,
+      "A receber": 115.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "4x",
+      "Situação": "Pendente"
+    },
+    {
+      "_rowIndex": 36,
+      "Data": "2026-10-05",
+      "Cliente (opcional)": "Cliente 35",
+      "Serviço": "Extensão de cílios",
+      "Valor total": 190.0,
+      "Recebido": 160.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 37,
+      "Data": "2026-10-06",
+      "Cliente (opcional)": "Cliente 36",
+      "Serviço": "Manutenção de cílios",
+      "Valor total": 100.0,
+      "Recebido": 100.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 38,
+      "Data": "2026-10-07",
+      "Cliente (opcional)": "Cliente 37",
+      "Serviço": "Design de sobrancelhas",
+      "Valor total": 55.0,
+      "Recebido": 25.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "3x",
+      "Situação": "Concluído"
+    },
+    {
+      "_rowIndex": 39,
+      "Data": "2026-10-08",
+      "Cliente (opcional)": "Cliente 38",
+      "Serviço": "Design com henna",
+      "Valor total": 75.0,
+      "Recebido": 45.0,
+      "A receber": 0.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Situação": "Concluído"
+    }
+  ],
+  "despesas": [
+    {
+      "_rowIndex": 2,
+      "Data": "2026-10-02",
+      "Categoria": "Materiais",
+      "Descrição": "Algodão, luvas e descartáveis",
+      "Valor": 185.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "3x",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 3,
+      "Data": "2026-10-03",
+      "Categoria": "Aluguel",
+      "Descrição": "Sala de atendimento",
+      "Valor": 900.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 4,
+      "Data": "2026-10-04",
+      "Categoria": "Produtos",
+      "Descrição": "Cola e fios para extensão",
+      "Valor": 310.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 5,
+      "Data": "2026-10-06",
+      "Categoria": "Marketing",
+      "Descrição": "Anúncios Instagram",
+      "Valor": 120.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "2x",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 6,
+      "Data": "2026-10-08",
+      "Categoria": "Serviços",
+      "Descrição": "Internet e telefone",
+      "Valor": 95.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 7,
+      "Data": "2026-10-10",
+      "Categoria": "Materiais",
+      "Descrição": "Henna e pigmentos",
+      "Valor": 145.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 8,
+      "Data": "2026-10-12",
+      "Categoria": "Taxas",
+      "Descrição": "Taxas de maquininha",
+      "Valor": 65.0,
+      "Forma de pagamento": "Crédito",
+      "Parcelas": "1x",
+      "Observações": null
+    },
+    {
+      "_rowIndex": 9,
+      "Data": "2026-10-14",
+      "Categoria": "Limpeza",
+      "Descrição": "Produtos de limpeza",
+      "Valor": 75.0,
+      "Forma de pagamento": "Pix",
+      "Parcelas": "À vista",
+      "Observações": null
+    }
+  ],
+  "outros": [
+    {
+      "_rowIndex": 2,
+      "Data": "2026-10-05",
+      "Descrição": "Venda de kit de cuidados",
+      "Valor recebido": 80.0,
+      "Observações": "Exemplo fictício"
+    },
+    {
+      "_rowIndex": 3,
+      "Data": "2026-10-09",
+      "Descrição": "Venda de escovinha",
+      "Valor recebido": 35.0,
+      "Observações": "Exemplo fictício"
+    },
+    {
+      "_rowIndex": 4,
+      "Data": "2026-10-13",
+      "Descrição": "Sinal retido por cancelamento",
+      "Valor recebido": 30.0,
+      "Observações": "Sem atendimento realizado"
+    }
+  ],
+  "pessoal": [
+    {
+      "_rowIndex": 2,
+      "Data": "2026-10-01",
+      "Tipo": "Receita",
+      "Categoria": "Retirada da empresa",
+      "Descrição": "Transferência para uso pessoal",
+      "Valor": 1800.0,
+      "Observações": "Não lançar como despesa operacional"
+    },
+    {
+      "_rowIndex": 3,
+      "Data": "2026-10-02",
+      "Tipo": "Despesa",
+      "Categoria": "Moradia",
+      "Descrição": "Aluguel residencial",
+      "Valor": 850.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 4,
+      "Data": "2026-10-03",
+      "Tipo": "Despesa",
+      "Categoria": "Alimentação",
+      "Descrição": "Supermercado",
+      "Valor": 360.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 5,
+      "Data": "2026-10-05",
+      "Tipo": "Despesa",
+      "Categoria": "Transporte",
+      "Descrição": "Combustível / aplicativo",
+      "Valor": 140.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 6,
+      "Data": "2026-10-07",
+      "Tipo": "Despesa",
+      "Categoria": "Saúde",
+      "Descrição": "Farmácia",
+      "Valor": 85.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 7,
+      "Data": "2026-10-09",
+      "Tipo": "Despesa",
+      "Categoria": "Lazer",
+      "Descrição": "Cinema e jantar",
+      "Valor": 115.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 8,
+      "Data": "2026-10-11",
+      "Tipo": "Despesa",
+      "Categoria": "Assinatura",
+      "Descrição": "Streaming",
+      "Valor": 45.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 9,
+      "Data": "2026-10-13",
+      "Tipo": "Despesa",
+      "Categoria": "Alimentação",
+      "Descrição": "Compras da semana",
+      "Valor": 220.0,
+      "Observações": null
+    },
+    {
+      "_rowIndex": 10,
+      "Data": "2026-10-14",
+      "Tipo": "Receita",
+      "Categoria": "Outros",
+      "Descrição": "Venda de item pessoal",
+      "Valor": 120.0,
+      "Observações": null
+    }
+  ],
+  "metas": {
+    "faturamento": 5000,
+    "reserva": 10000,
+    "limitePessoal": 2500
+  }
+}

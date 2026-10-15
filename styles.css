@@ -1,0 +1,232 @@
+/* ==========================================================================
+   SISTEMA FINANCEIRO EXCLUSIVO - BEATRIZ LEAL BEAUTY
+   Inspirado em https://bialealbeauty.com.br
+   ========================================================================== */
+
+:root {
+  --rose-logo: #D4888C;
+  --rose-hover: #c4777b;
+  --rose-light: rgba(212, 136, 140, 0.12);
+  --gold-accent: #C5A059;
+  --gold-light: rgba(197, 160, 89, 0.12);
+  --dark-bg: #1A1A1A;
+  --dark-card: #222222;
+  --bg-sand: #F9F7F2;
+  --card-white: #FFFFFF;
+  --text-primary: #2B2A29;
+  --text-secondary: #74706B;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --shadow-lux: 0 20px 45px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 25px 50px rgba(212, 136, 140, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: var(--bg-sand);
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tipografia */
+h1, h2, h3, h4, .serif {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-montserrat {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Botão Rose Premium (Efeito Idêntico ao Site Oficial) */
+.rose-button {
+  background-color: var(--rose-logo);
+  color: #FFFFFF;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(212, 136, 140, 0.25);
+}
+
+.rose-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0);
+}
+
+.rose-button:hover::after {
+  transform: translate(-50%, -50%) rotate(45deg) scale(1);
+}
+
+.rose-button:hover {
+  background-color: var(--rose-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(212, 136, 140, 0.35);
+}
+
+/* Botão Secundário Dourado */
+.gold-button {
+  background-color: transparent;
+  color: var(--gold-accent);
+  border: 1px solid var(--gold-accent);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.gold-button:hover {
+  background-color: var(--gold-accent);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(197, 160, 89, 0.25);
+}
+
+/* Cards Luxo com Borda Suave */
+.card-lux {
+  background: var(--card-white);
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lux);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.card-lux:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Card Escuro Elegante */
+.card-dark {
+  background: linear-gradient(145deg, #1A1A1A 0%, #262322 100%);
+  color: #FFFFFF;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(212, 136, 140, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Badges e Pílulas */
+.badge-rose {
+  background-color: var(--rose-light);
+  color: #9C5156;
+  border: 1px solid rgba(212, 136, 140, 0.3);
+}
+
+.badge-gold {
+  background-color: var(--gold-light);
+  color: #94712F;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+}
+
+.badge-dark {
+  background-color: rgba(26, 26, 26, 0.08);
+  color: var(--dark-bg);
+}
+
+/* Navegação Tabs Ativa */
+.tab-btn {
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+  color: var(--rose-logo);
+  border-bottom: 2px solid var(--rose-logo);
+  font-weight: 600;
+}
+
+/* Inputs e Formulários */
+.lux-input {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+  color: var(--text-primary);
+}
+
+.lux-input:focus {
+  outline: none;
+  border-color: var(--rose-logo);
+  box-shadow: 0 0 0 3px rgba(212, 136, 140, 0.15);
+}
+
+/* Barra de Rolagem Personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1ECE4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8CEBE;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rose-logo);
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease forwards;
+}
+
+/* Efeito Pulsante de Status */
+.pulse-green {
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Tabela Personalizada */
+.lux-table th {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8C8681;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1rem 1.25rem;
+}
+
+.lux-table td {
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.lux-table tr:hover td {
+  background-color: rgba(212, 136, 140, 0.03);
+}

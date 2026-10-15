@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Financeira Exclusiva | Beatriz Leal Beauty</title>
+  <meta name="description" content="Painel executivo financeiro exclusivo para Beatriz Leal Beauty com sincronização Google Sheets.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="./assets/images/favicon.png">
+
+  <!-- Google Fonts: Playfair Display & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles (Identidade bialealbeauty.com.br) -->
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body class="antialiased selection:bg-[#D4888C] selection:text-white">
+
+  <!-- ====================================================================
+       TOP HEADER EXCLUSIVO
+       ==================================================================== -->
+  <header class="bg-[#1A1A1A] text-white border-b border-[#D4888C]/20 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Logo e Título -->
+      <div class="flex items-center gap-3">
+        <img src="./assets/images/logo.png" alt="Beatriz Leal Beauty" class="h-10 md:h-12 w-auto object-contain">
+        <div class="border-l border-white/20 pl-3 hidden sm:block">
+          <span class="text-[10px] uppercase tracking-[0.25em] text-[#D4888C] font-semibold block">Painel Executivo</span>
+          <span class="text-xs text-white/80 font-light">Gestão Financeira & Caixa</span>
+        </div>
+      </div>
+
+      <!-- Seletor de Período (Mês e Ano) -->
+      <div class="flex items-center bg-[#252221] border border-white/10 rounded-full px-2 py-1 shadow-inner">
+        <button id="btn-prev-month" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white transition" title="Mês Anterior">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+
+        <select id="select-month" class="bg-transparent text-white text-xs font-semibold px-2 py-1 focus:outline-none cursor-pointer">
+          <option value="all" class="bg-[#222]">Ano Completo</option>
+          <option value="1" class="bg-[#222]">Janeiro</option>
+          <option value="2" class="bg-[#222]">Fevereiro</option>
+          <option value="3" class="bg-[#222]">Março</option>
+          <option value="4" class="bg-[#222]">Abril</option>
+          <option value="5" class="bg-[#222]">Maio</option>
+          <option value="6" class="bg-[#222]">Junho</option>
+          <option value="7" class="bg-[#222]">Julho</option>
+          <option value="8" class="bg-[#222]">Agosto</option>
+          <option value="9" class="bg-[#222]">Setembro</option>
+          <option value="10" selected class="bg-[#222]">Outubro</option>
+          <option value="11" class="bg-[#222]">Novembro</option>
+          <option value="12" class="bg-[#222]">Dezembro</option>
+        </select>
+
+        <select id="select-year" class="bg-transparent text-white text-xs font-semibold px-2 py-1 focus:outline-none border-l border-white/10 cursor-pointer">
+          <option value="2026" selected class="bg-[#222]">2026</option>
+          <option value="2027" class="bg-[#222]">2027</option>
+          <option value="2028" class="bg-[#222]">2028</option>
+        </select>
+
+        <button id="btn-next-month" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white transition" title="Próximo Mês">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Badge de Status e Ações Rápidas -->
+      <div class="flex items-center gap-3">
+        <div id="sync-status-badge" onclick="switchTab('config')" class="cursor-pointer" title="Clique para configurar o Google Apps Script">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+            <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Carregando...
+          </span>
+        </div>
+
+        <button id="btn-sync" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#D4888C] text-white flex items-center justify-center transition shadow" title="Sincronizar com Google Sheets">
+          <i class="fa-solid fa-rotate text-xs"></i>
+        </button>
+
+        <button onclick="openNewAtendimento()" class="rose-button px-4 py-2 rounded-full text-[11px] flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>Atendimento</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       BARRA DE NAVEGAÇÃO SECUNDÁRIA (TABS)
+       ==================================================================== -->
+  <nav class="bg-white border-b border-black/5 sticky top-[69px] z-30 shadow-sm overflow-x-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 text-xs font-semibold tracking-wider uppercase">
+      <button class="tab-btn py-4 active" data-tab="dashboard">
+        <i class="fa-solid fa-chart-pie mr-1.5 text-sm"></i> Visão Geral
+      </button>
+      <button class="tab-btn py-4" data-tab="atendimentos">
+        <i class="fa-regular fa-calendar-check mr-1.5 text-sm"></i> Atendimentos
+      </button>
+      <button class="tab-btn py-4" data-tab="despesas">
+        <i class="fa-solid fa-receipt mr-1.5 text-sm"></i> Despesas Empresa
+      </button>
+      <button class="tab-btn py-4" data-tab="outros">
+        <i class="fa-solid fa-bag-shopping mr-1.5 text-sm"></i> Receitas Extras
+      </button>
+      <button class="tab-btn py-4" data-tab="pessoal">
+        <i class="fa-solid fa-user-tie mr-1.5 text-sm"></i> Finanças Pessoais
+      </button>
+      <button class="tab-btn py-4" data-tab="metas">
+        <i class="fa-solid fa-bullseye mr-1.5 text-sm"></i> Metas
+      </button>
+      <button class="tab-btn py-4" data-tab="config">
+        <i class="fa-solid fa-sliders mr-1.5 text-sm"></i> Conexão Sheets
+      </button>
+    </div>
+  </nav>
+
+  <!-- ====================================================================
+       CONTEÚDO PRINCIPAL
+       ==================================================================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ==================================================================
+         ABA 1: DASHBOARD / VISÃO GERAL
+         ================================================================== -->
+    <div id="tab-dashboard" class="tab-content space-y-8 animate-fade-in">
+      
+      <!-- Banner com Título e Período Selecionado -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-black/5">
+        <div>
+          <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Resumo Operacional & Financeiro
+          </span>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 serif">
+            Painel de Resultados — <span id="label-periodo-atual" class="text-[#D4888C]">Outubro de 2026</span>
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openNewDespesa()" class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:border-[#D4888C] hover:text-[#D4888C] transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-receipt text-rose-400"></i> + Despesa
+          </button>
+          <button onclick="openModal('modal-pro-labore')" class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:border-[#C5A059] hover:text-[#C5A059] transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-hand-holding-dollar text-amber-500"></i> Retirar Pró-labore
+          </button>
+          <button onclick="exportDataCSV()" class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:border-black transition flex items-center gap-2 shadow-sm" title="Exportar dados para Excel/CSV">
+            <i class="fa-solid fa-download"></i> Exportar
+          </button>
+        </div>
+      </div>
+
+      <!-- CARDS EXECUTIVOS (KPIS) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- Card 1: Faturamento Bruto Real (com Sinal incluído) -->
+        <div class="card-lux p-6 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Faturamento Bruto</span>
+            <div class="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center text-[#D4888C]">
+              <i class="fa-solid fa-chart-line text-sm"></i>
+            </div>
+          </div>
+          <div class="serif text-2xl md:text-3xl font-bold text-gray-900 mb-1" id="kpi-faturamento">R$ 0,00</div>
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span id="kpi-atendimentos-qtd" class="font-medium">0 atendimentos</span>
+            <span class="text-emerald-600 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-sparkles text-[10px]"></i> Total Serviços
+            </span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#D4888C] to-rose-300"></div>
+        </div>
+
+        <!-- Card 2: Entradas no Caixa vs Pendente -->
+        <div class="card-lux p-6 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Recebido no Caixa</span>
+            <div class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-[#C5A059]">
+              <i class="fa-solid fa-wallet text-sm"></i>
+            </div>
+          </div>
+          <div class="serif text-2xl md:text-3xl font-bold text-emerald-700 mb-1" id="kpi-recebido-caixa">R$ 0,00</div>
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span>A Receber:</span>
+            <span id="kpi-a-receber" class="font-bold text-amber-600">R$ 0,00</span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C5A059] to-amber-200"></div>
+        </div>
+
+        <!-- Card 3: Despesas Operacionais da Empresa -->
+        <div class="card-lux p-6 relative overflow-hidden group">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Despesas Empresa</span>
+            <div class="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600">
+              <i class="fa-solid fa-receipt text-sm"></i>
+            </div>
+          </div>
+          <div class="serif text-2xl md:text-3xl font-bold text-rose-600 mb-1" id="kpi-despesas-empresa">R$ 0,00</div>
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span>Custos operacionais</span>
+            <span class="text-stone-400">Insumos & Aluguel</span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-rose-400"></div>
+        </div>
+
+        <!-- Card 4: Lucro Líquido Real da Empresa -->
+        <div class="card-lux p-6 relative overflow-hidden group bg-gradient-to-br from-white to-stone-50">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Lucro Líquido PJ</span>
+            <div class="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <i class="fa-solid fa-coins text-sm"></i>
+            </div>
+          </div>
+          <div class="serif text-2xl md:text-3xl font-bold text-gray-900 mb-1" id="kpi-lucro-empresa">R$ 0,00</div>
+          <div class="flex items-center justify-between text-xs">
+            <span id="kpi-margem-lucro" class="font-bold text-emerald-600">0% margem</span>
+            <span class="text-gray-400 text-[11px]">Antes do Pró-labore</span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
+        </div>
+
+      </div>
+
+      <!-- SEGUNDA LINHA: META & FINANÇAS PESSOAIS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Card Meta de Faturamento do Mês -->
+        <div class="card-lux p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Progresso da Meta</span>
+              <span id="meta-faturamento-pct" class="text-sm font-bold text-[#D4888C]">0%</span>
+            </div>
+            <h3 class="serif text-xl font-bold text-gray-900 mb-2">Meta de Faturamento Mensal</h3>
+            <p class="text-xs text-gray-500 mb-4" id="meta-faturamento-alvo">Meta: R$ 5.000,00</p>
+          </div>
+
+          <div>
+            <div class="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden border border-gray-200">
+              <div id="meta-faturamento-bar" class="h-3 rounded-full bg-gradient-to-r from-[#D4888C] to-[#C5A059] transition-all duration-1000" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-gray-400 font-medium">
+              <span>R$ 0</span>
+              <span>100% da Meta</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Resumo Finanças Pessoais (Bia Leal - PF) -->
+        <div class="card-dark p-6 lg:col-span-2 flex flex-col justify-between relative overflow-hidden">
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#D4888C] border border-[#D4888C]/30 px-3 py-1 rounded-full">
+                Finanças Pessoais (Pessoa Física)
+              </span>
+              <button onclick="openModal('modal-pro-labore')" class="text-xs text-[#C5A059] hover:underline font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-plus-circle"></i> Nova Retirada
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+              <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                <span class="text-xs text-white/60 block mb-1">Pró-labore Retirado</span>
+                <span class="serif text-xl md:text-2xl font-bold text-[#D4888C]" id="kpi-retirada-empresa">R$ 0,00</span>
+                <span class="text-[10px] text-white/40 block mt-1">Transferência PJ → PF</span>
+              </div>
+
+              <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                <span class="text-xs text-white/60 block mb-1">Gastos Pessoais</span>
+                <span class="serif text-xl md:text-2xl font-bold text-rose-300" id="kpi-gastos-pessoais">R$ 0,00</span>
+                <span class="text-[10px] text-white/40 block mt-1">Moradia, mercado, etc.</span>
+              </div>
+
+              <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                <span class="text-xs text-white/60 block mb-1">Saldo Pessoal</span>
+                <span class="serif text-xl md:text-2xl font-bold text-emerald-400" id="kpi-saldo-pessoal">R$ 0,00</span>
+                <span class="text-[10px] text-white/40 block mt-1">Sobra / Reserva pessoal</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-[11px] text-white/50 relative z-10 pt-2 border-t border-white/10 flex justify-between items-center">
+            <span>Dica: Mantenha sempre a conta da empresa separada da sua conta pessoal.</span>
+            <button onclick="switchTab('pessoal')" class="text-white hover:text-[#D4888C] transition text-xs font-semibold">
+              Ver Detalhes <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TERCEIRA LINHA: GRÁFICOS VISUAIS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Gráfico 1: Evolução Anual -->
+        <div class="card-lux p-6 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="serif text-lg font-bold text-gray-900">Evolução de Faturamento vs. Despesas</h3>
+              <p class="text-xs text-gray-400">Histórico mês a mês do ano de 2026</p>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="chart-evolucao"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: Mix de Procedimentos Mais Lucrativos -->
+        <div class="card-lux p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="serif text-lg font-bold text-gray-900">Procedimentos</h3>
+              <p class="text-xs text-gray-400">Distribuição da receita no período</p>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="chart-procedimentos"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================================================================
+         ABA 2: ATENDIMENTOS
+         ================================================================== -->
+    <div id="tab-atendimentos" class="tab-content hidden space-y-6">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
+        <div>
+          <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Agenda & Caixa Diário
+          </span>
+          <h2 class="text-2xl font-bold text-gray-900 serif">Atendimentos Realizados</h2>
+        </div>
+
+        <button onclick="openNewAtendimento()" class="rose-button px-5 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Novo Atendimento
+        </button>
+      </div>
+
+      <!-- Barra de Filtros e Busca -->
+      <div class="card-lux p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+          <!-- Input Busca -->
+          <div class="relative flex-1 min-w-[200px]">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+            <input type="text" id="search-atendimentos" placeholder="Buscar por cliente ou serviço..." class="lux-input w-full pl-9 text-xs">
+          </div>
+
+          <!-- Filtro Status -->
+          <select id="filter-status" class="lux-input text-xs cursor-pointer">
+            <option value="all">Todos os Status</option>
+            <option value="concluído">Concluídos</option>
+            <option value="pendente">Pendentes (A Receber)</option>
+            <option value="cancelado">Cancelados</option>
+          </select>
+
+          <!-- Filtro Forma de Pagamento -->
+          <select id="filter-payment" class="lux-input text-xs cursor-pointer">
+            <option value="all">Todas as Formas</option>
+            <option value="pix">Pix</option>
+            <option value="crédito">Crédito</option>
+            <option value="débito">Débito</option>
+            <option value="dinheiro">Dinheiro</option>
+          </select>
+        </div>
+
+        <button onclick="exportDataCSV()" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition flex items-center gap-2">
+          <i class="fa-solid fa-file-csv"></i> Baixar CSV
+        </button>
+      </div>
+
+      <!-- Tabela Luxo de Atendimentos -->
+      <div class="card-lux overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left lux-table">
+            <thead class="bg-stone-50 border-b border-black/5">
+              <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Procedimento</th>
+                <th>Valor Total</th>
+                <th>Recebido (Sinal + Restante)</th>
+                <th>A Receber</th>
+                <th>Pagamento</th>
+                <th>Situação</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-atendimentos" class="divide-y divide-black/5 font-montserrat">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================================================================
+         ABA 3: DESPESAS DA EMPRESA
+         ================================================================== -->
+    <div id="tab-despesas" class="tab-content hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
+        <div>
+          <span class="badge-gold px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Custos Operacionais
+          </span>
+          <h2 class="text-2xl font-bold text-gray-900 serif">Despesas da Empresa (PJ)</h2>
+        </div>
+
+        <button onclick="openNewDespesa()" class="rose-button px-5 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Nova Despesa
+        </button>
+      </div>
+
+      <div class="card-lux overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left lux-table">
+            <thead class="bg-stone-50 border-b border-black/5">
+              <tr>
+                <th>Data</th>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Pagamento</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-despesas" class="divide-y divide-black/5 font-montserrat">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         ABA 4: RECEITAS EXTRAS / PRODUTOS
+         ================================================================== -->
+    <div id="tab-outros" class="tab-content hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
+        <div>
+          <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Vendas e Outras Entradas
+          </span>
+          <h2 class="text-2xl font-bold text-gray-900 serif">Receitas Avulsas & Produtos</h2>
+        </div>
+
+        <button onclick="openNewReceitaExtra()" class="rose-button px-5 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Nova Receita Extra
+        </button>
+      </div>
+
+      <div class="card-lux overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left lux-table">
+            <thead class="bg-stone-50 border-b border-black/5">
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Valor Recebido</th>
+                <th>Observações</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-outros" class="divide-y divide-black/5 font-montserrat">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         ABA 5: FINANÇAS PESSOAIS (PF)
+         ================================================================== -->
+    <div id="tab-pessoal" class="tab-content hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
+        <div>
+          <span class="badge-dark px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Beatriz Leal - Pessoa Física
+          </span>
+          <h2 class="text-2xl font-bold text-gray-900 serif">Finanças Pessoais & Pró-labore</h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="openModal('modal-pro-labore')" class="gold-button px-4 py-2 rounded-full text-xs flex items-center gap-2">
+            <i class="fa-solid fa-hand-holding-dollar"></i> Retirar Pró-labore
+          </button>
+          <button onclick="openNewPessoal()" class="rose-button px-4 py-2 rounded-full text-xs flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Novo Gasto Pessoal
+          </button>
+        </div>
+      </div>
+
+      <div class="card-lux overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left lux-table">
+            <thead class="bg-stone-50 border-b border-black/5">
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-pessoal" class="divide-y divide-black/5 font-montserrat">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         ABA 6: METAS & PLANEJAMENTO
+         ================================================================== -->
+    <div id="tab-metas" class="tab-content hidden space-y-6">
+      <div class="pb-4 border-b border-black/5">
+        <span class="badge-gold px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+          Planejamento Estratégico
+        </span>
+        <h2 class="text-2xl font-bold text-gray-900 serif">Definição de Metas Financeiras</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <form onsubmit="submitMetas(event)" class="card-lux p-6 space-y-6">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Meta de Faturamento Mensal (R$)</label>
+            <input type="number" id="input-meta-fat" step="100" class="lux-input w-full text-lg font-bold text-gray-900" required>
+            <p class="text-xs text-gray-400 mt-1">Valor alvo de faturamento bruto dos atendimentos no mês.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Meta de Reserva de Emergência (R$)</label>
+            <input type="number" id="input-meta-res" step="500" class="lux-input w-full text-lg font-bold text-gray-900" required>
+            <p class="text-xs text-gray-400 mt-1">Colchão financeiro para segurança do seu estúdio.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Teto Limite de Gastos Pessoais (R$)</label>
+            <input type="number" id="input-meta-lim" step="100" class="lux-input w-full text-lg font-bold text-gray-900" required>
+            <p class="text-xs text-gray-400 mt-1">Limite recomendado de despesas pessoais mensais.</p>
+          </div>
+
+          <button type="submit" class="rose-button w-full py-3 rounded-xl text-xs font-bold">
+            Salvar Metas
+          </button>
+        </form>
+
+        <div class="card-dark p-6 flex flex-col justify-between">
+          <div>
+            <h3 class="serif text-xl font-bold text-[#D4888C] mb-3">Filosofia Financeira Beatriz Leal</h3>
+            <p class="text-sm text-white/80 leading-relaxed mb-4">
+              Um negócio de beleza próspero não depende apenas de uma agenda cheia, mas sim da clareza absoluta entre o que é da <strong>empresa</strong> e o que é seu como <strong>profissional</strong>.
+            </p>
+            <ul class="text-xs text-white/70 space-y-3">
+              <li class="flex items-start gap-2">
+                <i class="fa-solid fa-check text-[#D4888C] mt-1"></i>
+                <span><strong>Separação de Caixas:</strong> Pague as despesas do estúdio apenas com o caixa da empresa.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i class="fa-solid fa-check text-[#D4888C] mt-1"></i>
+                <span><strong>Pró-labore Definido:</strong> Defina um dia fixo no mês ou quinzenal para sua retirada pessoal.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <i class="fa-solid fa-check text-[#D4888C] mt-1"></i>
+                <span><strong>Sinais de Agendamento:</strong> O sinal garante o compromisso da cliente e diminui faltas para quase zero.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-6 border-t border-white/10 text-xs text-white/40">
+            Sincronizado automaticamente com a aba "Metas" da sua planilha.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         ABA 7: CONFIGURAÇÕES & GOOGLE APPS SCRIPT
+         ================================================================== -->
+    <div id="tab-config" class="tab-content hidden space-y-8">
+      <div class="pb-4 border-b border-black/5">
+        <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+          Integração Google Sheets
+        </span>
+        <h2 class="text-2xl font-bold text-gray-900 serif">Conexão do Google Apps Script & GitHub Pages</h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Painel de Conexão -->
+        <div class="card-lux p-6 space-y-6">
+          <h3 class="serif text-lg font-bold text-gray-900">URL do seu Web App (Apps Script)</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">
+            Cole abaixo a URL gerada quando você implantou o arquivo <code class="bg-gray-100 px-1 py-0.5 rounded text-rose-600 font-mono">Codigo.gs</code> como Web App no Google Apps Script:
+          </p>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Web App Exec URL</label>
+            <input type="url" id="config-api-url" value="https://script.google.com/macros/s/AKfycbxNMWhtU06JuOv_E5wuNyIYKr0wIPnRD6qfBl4qMpgKccEc2m4EG9XO5K1brPATYHzO/exec" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="lux-input w-full text-xs font-mono">
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="btn-save-api" class="rose-button flex-1 py-2.5 rounded-xl text-xs font-bold">
+              Salvar Configuração
+            </button>
+            <button id="btn-test-api" class="gold-button flex-1 py-2.5 rounded-xl text-xs font-bold">
+              <i class="fa-solid fa-bolt mr-1.5"></i> Testar Conexão
+            </button>
+          </div>
+
+          <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 text-xs text-stone-600 space-y-2">
+            <div class="font-bold flex items-center gap-2 text-stone-800">
+              <i class="fa-solid fa-shield-halved text-[#D4888C]"></i> Segurança e Privacidade
+            </div>
+            <p>
+              Todos os dados ficam armazenados exclusivamente na sua conta do Google Drive na sua planilha oficial. Nenhuma informação financeira é enviada para servidores de terceiros.
+            </p>
+          </div>
+        </div>
+
+        <!-- Passo a Passo Tutorial -->
+        <div class="card-lux p-6 space-y-4">
+          <h3 class="serif text-lg font-bold text-gray-900">Como ativar em 3 passos:</h3>
+
+          <div class="space-y-4 text-xs text-gray-600">
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-rose-100 text-[#D4888C] font-bold flex items-center justify-center shrink-0">1</span>
+              <div>
+                <strong class="text-gray-900 block mb-0.5">Cole o código no Google Sheets</strong>
+                <span>Na sua planilha, clique em <strong>Extensões → Apps Script</strong>. Copie todo o conteúdo do arquivo <code class="bg-gray-100 px-1 rounded text-rose-600">Codigo.gs</code> e cole lá.</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-rose-100 text-[#D4888C] font-bold flex items-center justify-center shrink-0">2</span>
+              <div>
+                <strong class="text-gray-900 block mb-0.5">Implante como Web App</strong>
+                <span>Clique em <strong>Implantar → Nova Implantação</strong>. Escolha o tipo <strong>App da Web</strong>. Configure <em>"Executar como: Eu"</em> e <em>"Quem pode acessar: Qualquer pessoa"</em>.</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span class="w-6 h-6 rounded-full bg-rose-100 text-[#D4888C] font-bold flex items-center justify-center shrink-0">3</span>
+              <div>
+                <strong class="text-gray-900 block mb-0.5">Cole a URL aqui e suba no GitHub</strong>
+                <span>Cole a URL do Web App gerada no campo ao lado e clique em Salvar. Pronto! Seu site já sincroniza ao vivo.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ====================================================================
+       RODAPÉ
+       ==================================================================== -->
+  <footer class="bg-white border-t border-black/5 mt-16 py-8 text-center text-xs text-gray-400 font-light">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="serif font-semibold text-gray-800">Beatriz Leal Beauty</span>
+        <span>•</span>
+        <span>Curitiba, PR</span>
+      </div>
+      <div>
+        Sistema Pessoal Exclusivo • Conectado via Google Apps Script
+      </div>
+    </div>
+  </footer>
+
+  <!-- ====================================================================
+       MODAIS DE LANÇAMENTO
+       ==================================================================== -->
+
+  <!-- Modal 1: Novo Atendimento -->
+  <div id="modal-novo-atendimento" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-black/5 animate-fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
+        <h3 id="modal-atend-title" class="serif text-xl font-bold text-gray-900">Novo Atendimento</h3>
+        <button onclick="closeModal('modal-novo-atendimento')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitAtendimento(event)" class="space-y-4">
+        <input type="hidden" id="modal-atend-rowindex" value="">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Data</label>
+            <input type="date" id="modal-data" class="lux-input w-full text-xs" required value="2026-10-15">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Cliente</label>
+            <input type="text" id="modal-cliente" placeholder="Nome da cliente" class="lux-input w-full text-xs" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Escolha Rápida do Procedimento</label>
+          <select id="modal-servico-select" class="lux-input w-full text-xs mb-2">
+            <option value="">Selecione um procedimento cadastrado...</option>
+            <option value="Design de sobrancelhas">Design de sobrancelhas (R$ 55,00)</option>
+            <option value="Design com henna">Design com henna (R$ 75,00)</option>
+            <option value="Lash lifting">Lash lifting (R$ 130,00)</option>
+            <option value="Brow lamination">Brow lamination (R$ 145,00)</option>
+            <option value="Extensão de cílios">Extensão de cílios (R$ 190,00)</option>
+            <option value="Manutenção de cílios">Manutenção de cílios (R$ 100,00)</option>
+            <option value="Micropigmentação labial">Micropigmentação labial (R$ 350,00)</option>
+            <option value="Micropigmentação sobrancelhas">Micropigmentação sobrancelhas (R$ 450,00)</option>
+          </select>
+          <input type="text" id="modal-servico" placeholder="Ou digite o nome do procedimento" class="lux-input w-full text-xs" required>
+        </div>
+
+        <!-- Linha Financeira Inteligente (Total, Sinal e Restante) -->
+        <div class="grid grid-cols-3 gap-2 bg-[#F9F7F2] p-3 rounded-xl border border-black/5">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">Valor Total (R$)</label>
+            <input type="number" id="modal-valor-total" step="0.01" class="lux-input w-full text-xs font-bold" required>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-amber-700 mb-1">Sinal Pix (R$)</label>
+            <input type="number" id="modal-sinal" step="0.01" value="30.00" class="lux-input w-full text-xs">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-emerald-700 mb-1">Pago no Dia (R$)</label>
+            <input type="number" id="modal-restante" step="0.01" class="lux-input w-full text-xs font-bold text-emerald-800" readonly>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">A Receber (R$)</label>
+            <input type="number" id="modal-a-receber" step="0.01" value="0.00" class="lux-input w-full text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Pagamento</label>
+            <select id="modal-forma-pagto" class="lux-input w-full text-xs">
+              <option value="Pix">Pix</option>
+              <option value="Crédito">Crédito</option>
+              <option value="Débito">Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Parcelas</label>
+            <select id="modal-parcelas" class="lux-input w-full text-xs">
+              <option value="À vista">À vista</option>
+              <option value="1x">1x</option>
+              <option value="2x">2x</option>
+              <option value="3x">3x</option>
+              <option value="4x">4x</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Situação</label>
+            <select id="modal-situacao" class="lux-input w-full text-xs font-semibold text-gray-800">
+              <option value="Concluído">Concluído</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Observações</label>
+            <input type="text" id="modal-observacoes" placeholder="Ex: Retorno em 30 dias..." class="lux-input w-full text-xs">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-novo-atendimento')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+          <button id="modal-atend-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Atendimento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Nova Despesa -->
+  <div id="modal-nova-despesa" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+      <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
+        <h3 id="modal-desp-title" class="serif text-xl font-bold text-gray-900">Nova Despesa da Empresa</h3>
+        <button onclick="closeModal('modal-nova-despesa')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitDespesa(event)" class="space-y-4">
+        <input type="hidden" id="modal-desp-rowindex" value="">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Data</label>
+            <input type="date" id="modal-desp-data" class="lux-input w-full text-xs" required value="2026-10-15">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Categoria</label>
+            <select id="modal-desp-cat" class="lux-input w-full text-xs">
+              <option value="Materiais">Materiais</option>
+              <option value="Produtos">Produtos</option>
+              <option value="Aluguel">Aluguel</option>
+              <option value="Marketing">Marketing / Anúncios</option>
+              <option value="Taxas">Taxas Maquininha</option>
+              <option value="Serviços">Internet / Telefone</option>
+              <option value="Limpeza">Limpeza</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição</label>
+          <input type="text" id="modal-desp-desc" placeholder="Ex: Cola para extensão, luvas..." class="lux-input w-full text-xs" required>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Valor (R$)</label>
+            <input type="number" id="modal-desp-valor" step="0.01" class="lux-input w-full text-xs font-bold text-rose-600" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Pagamento</label>
+            <select id="modal-desp-pagto" class="lux-input w-full text-xs">
+              <option value="Pix">Pix</option>
+              <option value="Crédito">Crédito</option>
+              <option value="Débito">Débito</option>
+              <option value="Boleto">Boleto</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Parcelas</label>
+            <select id="modal-desp-parcelas" class="lux-input w-full text-xs">
+              <option value="À vista">À vista</option>
+              <option value="2x">2x</option>
+              <option value="3x">3x</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Observações (opcional)</label>
+          <input type="text" id="modal-desp-obs" placeholder="Ex: NF 1234, comprado no fornecedor X" class="lux-input w-full text-xs">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-nova-despesa')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+          <button id="modal-desp-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Despesa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Retirada de Pró-labore -->
+  <div id="modal-pro-labore" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+      <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-[#C5A059] tracking-widest block">Transferência PJ → PF</span>
+          <h3 class="serif text-xl font-bold text-gray-900">Retirada de Pró-labore</h3>
+        </div>
+        <button onclick="closeModal('modal-pro-labore')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitProLabore(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Data da Transferência</label>
+          <input type="date" id="modal-pro-data" class="lux-input w-full text-xs" required value="2026-10-15">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Valor da Retirada (R$)</label>
+          <input type="number" id="modal-pro-valor" step="50" placeholder="Ex: 1800.00" class="lux-input w-full text-lg font-bold text-amber-600" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Observações</label>
+          <input type="text" id="modal-pro-obs" value="Transferência para uso pessoal" class="lux-input w-full text-xs">
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-xl text-xs text-amber-800 border border-amber-200">
+          Esta retirada será registrada como receita nas suas <strong>Finanças Pessoais</strong>.
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-pro-labore')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+          <button type="submit" class="gold-button px-5 py-2.5 rounded-xl text-xs font-bold">Transferir Agora</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Nova Receita Extra -->
+  <div id="modal-nova-receita-extra" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+      <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
+        <h3 id="modal-extra-title" class="serif text-xl font-bold text-gray-900">Nova Receita Extra</h3>
+        <button onclick="closeModal('modal-nova-receita-extra')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitReceitaExtra(event)" class="space-y-4">
+        <input type="hidden" id="modal-extra-rowindex" value="">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Data</label>
+          <input type="date" id="modal-extra-data" class="lux-input w-full text-xs" required value="2026-10-15">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição</label>
+          <input type="text" id="modal-extra-desc" placeholder="Ex: Venda kit de cuidados, escovinha..." class="lux-input w-full text-xs" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Valor Recebido (R$)</label>
+          <input type="number" id="modal-extra-valor" step="0.01" class="lux-input w-full text-xs font-bold text-emerald-600" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Observações</label>
+          <input type="text" id="modal-extra-obs" class="lux-input w-full text-xs">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-nova-receita-extra')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+          <button id="modal-extra-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Receita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Novo Lançamento Pessoal -->
+  <div id="modal-novo-pessoal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-black/5 animate-fade-in">
+      <div class="flex items-center justify-between pb-4 border-b border-black/5 mb-4">
+        <h3 id="modal-pess-title" class="serif text-xl font-bold text-gray-900">Lançamento Pessoal (PF)</h3>
+        <button onclick="closeModal('modal-novo-pessoal')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitPessoal(event)" class="space-y-4">
+        <input type="hidden" id="modal-pess-rowindex" value="">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Data</label>
+            <input type="date" id="modal-pess-data" class="lux-input w-full text-xs" required value="2026-10-15">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Tipo</label>
+            <select id="modal-pess-tipo" class="lux-input w-full text-xs">
+              <option value="Despesa">Despesa (Gasto)</option>
+              <option value="Receita">Receita (Entrada)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Categoria</label>
+          <select id="modal-pess-cat" class="lux-input w-full text-xs">
+            <option value="Moradia">Moradia</option>
+            <option value="Alimentação">Alimentação</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Saúde">Saúde</option>
+            <option value="Lazer">Lazer</option>
+            <option value="Retirada da empresa">Retirada da empresa</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Descrição</label>
+          <input type="text" id="modal-pess-desc" placeholder="Ex: Supermercado, Aluguel residencial..." class="lux-input w-full text-xs" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Valor (R$)</label>
+          <input type="number" id="modal-pess-valor" step="0.01" class="lux-input w-full text-xs font-bold text-gray-900" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Observações (opcional)</label>
+          <input type="text" id="modal-pess-obs" placeholder="Observações adicionais..." class="lux-input w-full text-xs">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-novo-pessoal')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+          <button id="modal-pess-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Container de Notificações Toast -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Script da Aplicação -->
+  <script src="./app.js"></script>
+</body>
+
+</html>
