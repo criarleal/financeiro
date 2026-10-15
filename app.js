@@ -6,7 +6,7 @@
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting)
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 // Estado da Aplicação
 const state = {
@@ -41,6 +41,104 @@ const PROCEDIMENTOS_CATALOGO = [
   { nome: 'Micropigmentação labial', valor: 350, sinal: 50 },
   { nome: 'Micropigmentação sobrancelhas', valor: 450, sinal: 50 }
 ];
+
+// Obtém catálogo dinâmico de procedimentos: mescla a lista base com qualquer procedimento já existente na planilha
+function getDynamicProcedimentos() {
+  const map = new Map();
+
+  // 1. Procedimentos base cadastrados no código
+  PROCEDIMENTOS_CATALOGO.forEach(p => {
+    const key = p.nome.trim().toLowerCase();
+    map.set(key, {
+      nome: p.nome.trim(),
+      valor: p.valor,
+      sinal: p.sinal,
+      isCustom: false
+    });
+  });
+
+  // 2. Extrai novos procedimentos a partir do histórico de atendimentos da planilha
+  const atendimentos = state.data?.atendimentos || [];
+  atendimentos.forEach(a => {
+    const servico = (a.servico || '').trim();
+    if (!servico) return;
+    const key = servico.toLowerCase();
+
+    const val = parseFloat(a.valorTotal) || 0;
+    const sin = parseFloat(a.sinal) || 30;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        nome: servico,
+        valor: val,
+        sinal: sin,
+        isCustom: true
+      });
+    } else {
+      const existing = map.get(key);
+      if (existing.isCustom && existing.valor === 0 && val > 0) {
+        existing.valor = val;
+        existing.sinal = sin;
+      }
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+// Popula dinamicamente o select de procedimentos no modal de Atendimento
+function populateProcedimentosSelect() {
+  const select = document.getElementById('modal-servico-select');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = '';
+
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Selecione um procedimento cadastrado...';
+  select.appendChild(defaultOption);
+
+  const catalog = getDynamicProcedimentos();
+  const personalizados = catalog.filter(p => p.isCustom);
+  const padroes = catalog.filter(p => !p.isCustom);
+
+  if (personalizados.length > 0) {
+    const groupPlanilha = document.createElement('optgroup');
+    groupPlanilha.label = '✨ Adicionados da Planilha';
+    personalizados.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.nome;
+      const priceText = p.valor > 0 ? ` (${formatBRL(p.valor)})` : '';
+      opt.textContent = `${p.nome}${priceText}`;
+      groupPlanilha.appendChild(opt);
+    });
+    select.appendChild(groupPlanilha);
+
+    const groupPadrao = document.createElement('optgroup');
+    groupPadrao.label = 'Procedimentos do Catálogo';
+    padroes.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.nome;
+      const priceText = p.valor > 0 ? ` (${formatBRL(p.valor)})` : '';
+      opt.textContent = `${p.nome}${priceText}`;
+      groupPadrao.appendChild(opt);
+    });
+    select.appendChild(groupPadrao);
+  } else {
+    padroes.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.nome;
+      const priceText = p.valor > 0 ? ` (${formatBRL(p.valor)})` : '';
+      opt.textContent = `${p.nome}${priceText}`;
+      select.appendChild(opt);
+    });
+  }
+
+  if (currentVal) {
+    select.value = currentVal;
+  }
+}
 
 // ==============================================================================
 // PARSER SEGURO DE DATAS (Sem problemas de fuso horário / GMT-3)
@@ -267,6 +365,8 @@ function initUI() {
   if (inputApiUrl && state.apiUrl) {
     inputApiUrl.value = state.apiUrl;
   }
+
+  populateProcedimentosSelect();
 }
 
 // Escutadores de Eventos
@@ -338,11 +438,18 @@ function setupEventListeners() {
 
   // Seleção rápida de procedimento no modal de atendimento
   document.getElementById('modal-servico-select')?.addEventListener('change', (e) => {
-    const proc = PROCEDIMENTOS_CATALOGO.find(p => p.nome === e.target.value);
+    const val = e.target.value;
+    if (!val) return;
+    const catalog = getDynamicProcedimentos();
+    const proc = catalog.find(p => p.nome.toLowerCase() === val.toLowerCase());
     if (proc) {
       document.getElementById('modal-servico').value = proc.nome;
-      document.getElementById('modal-valor-total').value = proc.valor;
-      document.getElementById('modal-sinal').value = proc.sinal;
+      if (proc.valor > 0) {
+        document.getElementById('modal-valor-total').value = proc.valor;
+      }
+      if (proc.sinal !== undefined && proc.sinal !== null) {
+        document.getElementById('modal-sinal').value = proc.sinal;
+      }
       recalculateModalAtendimento();
     }
   });
@@ -403,6 +510,7 @@ function renderAll() {
   renderOutrosTable();
   renderPessoalTable();
   renderMetasCard();
+  populateProcedimentosSelect();
 }
 
 // Filtra registros por mês e ano (Imune a fuso horário)
@@ -1098,6 +1206,7 @@ function closeModal(modalId) {
 
 // --- ATENDIMENTOS: NOVO E EDITAR ---
 function openNewAtendimento() {
+  populateProcedimentosSelect();
   document.getElementById('modal-atend-rowindex').value = '';
   document.getElementById('modal-atend-title').innerText = 'Novo Atendimento';
   document.getElementById('modal-atend-submit-btn').innerText = 'Salvar Atendimento';
@@ -1123,6 +1232,8 @@ function openEditAtendimento(listIndex) {
   const item = list[listIndex];
   if (!item) return;
 
+  populateProcedimentosSelect();
+
   document.getElementById('modal-atend-rowindex').value = item._rowIndex;
   document.getElementById('modal-atend-title').innerText = 'Editar Atendimento';
   document.getElementById('modal-atend-submit-btn').innerText = 'Salvar Alterações';
@@ -1130,7 +1241,13 @@ function openEditAtendimento(listIndex) {
   document.getElementById('modal-data').value = item.data;
   document.getElementById('modal-cliente').value = item.cliente;
   document.getElementById('modal-servico').value = item.servico;
-  document.getElementById('modal-servico-select').value = '';
+
+  const select = document.getElementById('modal-servico-select');
+  if (select) {
+    const match = Array.from(select.options).find(opt => opt.value.toLowerCase() === (item.servico || '').toLowerCase());
+    select.value = match ? match.value : '';
+  }
+
   document.getElementById('modal-valor-total').value = item.valorTotal;
   document.getElementById('modal-sinal').value = item.sinal;
   document.getElementById('modal-restante').value = item.restante;
