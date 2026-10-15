@@ -7,6 +7,11 @@
   <title>Gestão Financeira Exclusiva | Beatriz Leal Beauty</title>
   <meta name="description" content="Painel executivo financeiro exclusivo para Beatriz Leal Beauty com sincronização Google Sheets.">
 
+  <!-- Controle de Cache para Atualização Imediata (Cache Busting) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="./assets/images/favicon.png">
 
@@ -24,8 +29,8 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Custom Styles (Identidade bialealbeauty.com.br) -->
-  <link rel="stylesheet" href="./styles.css">
+  <!-- Custom Styles (Identidade bialealbeauty.com.br com versão) -->
+  <link rel="stylesheet" href="./styles.css?v=1.1.0">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -658,6 +663,16 @@
               Todos os dados ficam armazenados exclusivamente na sua conta do Google Drive na sua planilha oficial. Nenhuma informação financeira é enviada para servidores de terceiros.
             </p>
           </div>
+
+          <div class="pt-4 border-t border-black/5 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-gray-700 block">Cache & Versão do Sistema</span>
+              <span class="text-[11px] text-gray-400">Versão ativa: <span class="font-mono font-bold text-[#D4888C]">v1.1.0</span></span>
+            </div>
+            <button onclick="forceAppRefresh()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Limpar cache local e recarregar dados do Google Sheets">
+              <i class="fa-solid fa-arrows-rotate text-xs text-[#D4888C]"></i> Limpar Cache
+            </button>
+          </div>
         </div>
 
         <!-- Passo a Passo Tutorial -->
@@ -1036,11 +1051,19 @@
     </div>
   </div>
 
+  <!-- Rodapé Discreto com Versão da Aplicação -->
+  <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-gray-400 border-t border-black/5 mt-12 flex flex-col sm:flex-row items-center justify-between gap-2">
+    <span>© 2026 Beatriz Leal Beauty — Gestão Financeira Exclusiva</span>
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 font-mono text-[11px] border border-stone-200">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.1.0 (Mobile Edition)
+    </span>
+  </footer>
+
   <!-- Container de Notificações Toast -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Script da Aplicação -->
-  <script src="./app.js"></script>
+  <!-- Script da Aplicação com Versão (Cache Busting) -->
+  <script src="./app.js?v=1.1.0"></script>
 </body>
 
 </html>

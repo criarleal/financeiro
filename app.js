@@ -5,6 +5,9 @@
  * ==============================================================================
  */
 
+// Versão da Aplicação (Atualizada para Cache Busting)
+const APP_VERSION = '1.1.0';
+
 // Estado da Aplicação
 const state = {
   data: {
@@ -190,8 +193,30 @@ function normalizeFullDataset(raw) {
   };
 }
 
+// Verificação de Versão da Aplicação (Cache Busting Automático)
+function checkAppVersion() {
+  const savedVersion = localStorage.getItem('bia_app_version');
+  if (savedVersion !== APP_VERSION) {
+    console.log(`[BiaLeal] Atualizando versão de ${savedVersion || 'v1.0.0'} para ${APP_VERSION}. Limpando cache antigo.`);
+    localStorage.setItem('bia_app_version', APP_VERSION);
+    localStorage.removeItem('bia_fin_data');
+  }
+}
+
+// Forçar Atualização e Limpeza de Cache Manual
+function forceAppRefresh() {
+  localStorage.removeItem('bia_fin_data');
+  showToast('Cache limpo! Recarregando dados frescos...');
+  if (state.apiUrl) {
+    syncWithGoogleSheets(true);
+  } else {
+    setTimeout(() => window.location.reload(true), 600);
+  }
+}
+
 // Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', async () => {
+  checkAppVersion();
   await loadInitialData();
   initUI();
   setupEventListeners();
