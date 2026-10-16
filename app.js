@@ -164,7 +164,7 @@ const state = {
     pessoal: [],
     metas: { faturamento: 5000, reserva: 10000, limitePessoal: 2500 }
   },
-  apiUrl: localStorage.getItem('bia_fin_api_url') || 'https://script.google.com/macros/s/AKfycbxNMWhtU06JuOv_E5wuNyIYKr0wIPnRD6qfBl4qMpgKccEc2m4EG9XO5K1brPATYHzO/exec',
+  apiUrl: localStorage.getItem('bia_fin_api_url') || '',
   selectedYear: 2026,
   selectedMonth: 10,
   currentTab: 'dashboard',
@@ -582,7 +582,7 @@ function updateSupabaseStatusBadge(isConnected = null) {
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Supabase Configurado';
   } else {
     badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local / Planilha';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local (Demonstração)';
   }
 }
 
@@ -1397,8 +1397,11 @@ function setupEventListeners() {
   document.getElementById('btn-sync')?.addEventListener('click', () => {
     if (state.currentUser) {
       loadUserDataFromSupabase(state.currentUser);
-    } else {
+    } else if (state.apiUrl) {
       syncWithGoogleSheets(true);
+    } else {
+      showToast('Entre na sua conta para sincronizar na nuvem Supabase.');
+      openAuthModal();
     }
   });
   document.getElementById('btn-save-api')?.addEventListener('click', saveApiConfig);
@@ -2922,8 +2925,8 @@ function updateSyncBadge(status) {
     badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-pointer';
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Nuvem Supabase (Privado)</span><span class="sm:hidden text-[11px]">Nuvem</span>';
   } else if (status === 'connected') {
-    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Conectado ao Google Sheets</span><span class="sm:hidden text-[11px]">Online</span>';
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-pointer';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Online (Nuvem)</span><span class="sm:hidden text-[11px]">Online</span>';
   } else if (status === 'syncing') {
     badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
     badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span class="hidden sm:inline">Sincronizando...</span><span class="sm:hidden text-[11px]">Sync...</span>';
