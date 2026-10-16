@@ -6,7 +6,7 @@
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -47,7 +47,7 @@ const PERFIS_PRESETS = {
   barbearia: {
     id: 'barbearia',
     nomePerfil: 'Barbearia',
-    appName: 'Barbearia do Leal',
+    appName: 'Barbearia & Barber Shop',
     appSubtitle: 'Controle de Cortes & Caixa',
     logoIcon: 'fa-scissors',
     modules: {
@@ -632,7 +632,7 @@ function switchAuthMode(mode) {
     fieldPreset?.classList.add('hidden');
     if (submitBtnText) submitBtnText.innerText = 'Entrar no meu Painel';
     if (modalTitle) modalTitle.innerText = 'Acesso ao Painel';
-    if (modalSubtitle) modalSubtitle.innerText = 'Cada membro da família acessa seus dados de forma 100% individual.';
+    if (modalSubtitle) modalSubtitle.innerText = 'Acesse seu painel com segurança e privacidade total.';
   }
 }
 

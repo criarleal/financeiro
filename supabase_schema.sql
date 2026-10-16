@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SISTEMA FINANCEIRO MULTI-TENANT (SAAS FAMILIAR / UNIVERSAL)
+-- SISTEMA FINANCEIRO MULTI-TENANT (SAAS MULTI-USUÁRIO / UNIVERSAL)
 -- Schema PostgreSQL com Row Level Security (RLS) para Supabase
 -- ==============================================================================
 -- Execute este script no SQL Editor do seu projeto Supabase (supabase.com)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS public.metas (
 );
 
 -- ==============================================================================
--- ROW LEVEL SECURITY (RLS) - PRIVACIDADE TOTAL ENTRE FAMILIARES / USUÁRIOS
+-- ROW LEVEL SECURITY (RLS) - PRIVACIDADE TOTAL ENTRE USUÁRIOS / EMPRESAS
 -- ==============================================================================
 
 ALTER TABLE public.perfis ENABLE ROW LEVEL SECURITY;
