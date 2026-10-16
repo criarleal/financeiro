@@ -457,8 +457,11 @@ function renderCatalogoTable() {
       <td class="py-2.5 px-3 font-semibold text-gray-800">${item.nome}</td>
       <td class="py-2.5 px-3 font-bold text-gray-900">${formatBRL(item.valor)}</td>
       <td class="py-2.5 px-3 text-stone-600">${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}</td>
-      <td class="py-2.5 px-3 text-right">
-        <button onclick="removeCatalogoItem(${idx})" class="text-rose-500 hover:text-rose-700 p-1" title="Remover Serviço">
+      <td class="py-2.5 px-3 text-right whitespace-nowrap">
+        <button onclick="openEditCatalogoItem(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Serviço">
+          <i class="fa-regular fa-pen-to-square text-xs"></i>
+        </button>
+        <button onclick="removeCatalogoItem(${idx})" class="text-rose-500 hover:text-rose-700 p-1 transition-colors" title="Remover Serviço">
           <i class="fa-solid fa-trash text-xs"></i>
         </button>
       </td>
@@ -467,21 +470,97 @@ function renderCatalogoTable() {
 }
 
 function openModalAddCatalogoItem() {
+  const indexInput = document.getElementById('modal-cat-index');
+  if (indexInput) indexInput.value = '';
+  const titleEl = document.getElementById('modal-cat-title');
+  if (titleEl) titleEl.innerText = 'Novo Serviço / Item do Catálogo';
+  const submitBtn = document.getElementById('modal-cat-submit-btn');
+  if (submitBtn) submitBtn.innerText = 'Adicionar ao Catálogo';
+
   document.getElementById('modal-cat-nome').value = '';
   document.getElementById('modal-cat-valor').value = '';
   document.getElementById('modal-cat-sinal').value = '0.00';
   openModal('modal-add-catalogo');
 }
 
+function openEditCatalogoItem(idx) {
+  const catalog = state.config?.catalogo || [];
+  const item = catalog[idx];
+  if (!item) return;
+
+  const indexInput = document.getElementById('modal-cat-index');
+  if (indexInput) indexInput.value = String(idx);
+  const titleEl = document.getElementById('modal-cat-title');
+  if (titleEl) titleEl.innerText = 'Editar Serviço / Item do Catálogo';
+  const submitBtn = document.getElementById('modal-cat-submit-btn');
+  if (submitBtn) submitBtn.innerText = 'Salvar Alterações';
+
+  document.getElementById('modal-cat-nome').value = item.nome || '';
+  document.getElementById('modal-cat-valor').value = item.valor != null ? item.valor : '';
+  document.getElementById('modal-cat-sinal').value = item.sinal != null ? item.sinal : '0.00';
+  openModal('modal-add-catalogo');
+}
+
 function submitAddCatalogoItem(e) {
   e.preventDefault();
+  const indexVal = document.getElementById('modal-cat-index')?.value;
+  const isEditing = indexVal !== '' && indexVal !== null && indexVal !== undefined;
   const nome = document.getElementById('modal-cat-nome').value.trim();
   const valor = parseFloat(document.getElementById('modal-cat-valor').value) || 0;
   const sinal = parseFloat(document.getElementById('modal-cat-sinal').value) || 0;
 
   if (!nome) return;
 
+  if (!state.config) state.config = {};
   if (!state.config.catalogo) state.config.catalogo = [];
+
+  if (isEditing) {
+    const idx = parseInt(indexVal, 10);
+    const targetItem = state.config.catalogo[idx];
+    if (targetItem) {
+      targetItem.nome = nome;
+      targetItem.valor = valor;
+      targetItem.sinal = sinal;
+
+      localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+      closeModal('modal-add-catalogo');
+      renderCatalogoTable();
+      populateProcedimentosSelect();
+      showToast(`Serviço "${nome}" atualizado com sucesso!`);
+
+      // Se logado no Supabase, atualiza ou insere na nuvem
+      if (state.currentUser && state.supabaseClient) {
+        if (targetItem.id) {
+          state.supabaseClient
+            .from('catalogo_servicos')
+            .update({ nome, valor, sinal })
+            .eq('id', targetItem.id)
+            .then(({ error }) => {
+              if (error) console.error('Erro ao atualizar serviço no Supabase:', error);
+            });
+        } else {
+          state.supabaseClient
+            .from('catalogo_servicos')
+            .insert({
+              user_id: state.currentUser.id,
+              nome,
+              valor,
+              sinal,
+              ativo: true
+            })
+            .select()
+            .single()
+            .then(({ data: ins, error }) => {
+              if (ins) targetItem.id = ins.id;
+              if (error) console.error('Erro ao salvar serviço no Supabase:', error);
+            });
+        }
+      }
+      return;
+    }
+  }
+
+  // Novo item
   const newItem = { nome, valor, sinal };
   state.config.catalogo.push(newItem);
 
