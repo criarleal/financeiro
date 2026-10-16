@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Edição ao Clicar na Linha + Botão Deletar no Modal + Seleção e Exclusão em Massa)
-const APP_VERSION = '1.3.6';
+// Versão da Aplicação (Atualizada para Cache Busting - Adicionado Módulo/Preset 100% Empresa)
+const APP_VERSION = '1.3.7';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -126,6 +126,34 @@ const PERFIS_PRESETS = {
       custoNegocio: 'Custos'
     },
     catalogo: []
+  },
+  empresa: {
+    id: 'empresa',
+    nomePerfil: '100% Empresa',
+    appName: 'Gestão Financeira Empresarial',
+    appSubtitle: 'Controle de Clientes, Custos & Caixa PJ',
+    logoIcon: 'fa-building',
+    modules: {
+      operacoes: true,
+      empresa: true,
+      pessoal: false,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Atendimento',
+      operacaoPlural: 'Atendimentos',
+      clienteSingular: 'Cliente',
+      clientePlural: 'Clientes',
+      servicoSingular: 'Serviço',
+      custoNegocio: 'Despesas Empresa'
+    },
+    catalogo: [
+      { nome: 'Prestação de Serviços / Consultoria', valor: 350, sinal: 100 },
+      { nome: 'Contrato Mensal de Serviços PJ', valor: 1200, sinal: 300 },
+      { nome: 'Projeto / Execução Corporativa', valor: 2500, sinal: 500 },
+      { nome: 'Assessoria / Manutenção Especializada', valor: 800, sinal: 200 }
+    ]
   },
   personalizado: {
     id: 'personalizado',
@@ -1896,6 +1924,7 @@ function renderKPIs() {
   const cfg = state.config || {};
   const isOperacoesActive = cfg.modules?.operacoes !== false;
   const isEmpresaActive = cfg.modules?.empresa !== false;
+  const isPessoalActive = cfg.modules?.pessoal !== false;
   const termoPlural = cfg.terms?.operacaoPlural || 'Atendimentos';
 
   if (!isOperacoesActive && !isEmpresaActive) {
@@ -1960,12 +1989,63 @@ function renderKPIs() {
     setText('kpi-card4-title', 'Lucro Líquido PJ');
     setText('kpi-lucro-empresa', formatBRL(lucroOperacional));
     setText('kpi-margem-lucro', `${margemLucro.toFixed(1)}% margem`);
-    setText('kpi-card4-sub-detail', 'Antes do Pró-labore');
+    setText('kpi-card4-sub-detail', isPessoalActive ? 'Antes do Pró-labore' : 'Resultado da Operação');
   }
   
-  setText('kpi-retirada-empresa', formatBRL(retiradasEmpresa));
-  setText('kpi-gastos-pessoais', formatBRL(despesasPessoais));
-  setText('kpi-saldo-pessoal', formatBRL(saldoPessoal));
+  // Card Dark (Finanças Pessoais ou Fluxo Corporativo PJ)
+  if (isPessoalActive) {
+    setText('card-dark-badge', 'Finanças Pessoais (Pessoa Física)');
+    const btnAction = document.getElementById('card-dark-btn-action');
+    if (btnAction) {
+      btnAction.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Nova Retirada';
+      btnAction.setAttribute('onclick', "openModal('modal-pro-labore')");
+      btnAction.style.display = '';
+    }
+    setText('card-dark-kpi1-label', 'Pró-labore Retirado');
+    setText('kpi-retirada-empresa', formatBRL(retiradasEmpresa));
+    setText('card-dark-kpi1-sub', 'Transferência PJ → PF');
+
+    setText('card-dark-kpi2-label', 'Gastos Pessoais');
+    setText('kpi-gastos-pessoais', formatBRL(despesasPessoais));
+    setText('card-dark-kpi2-sub', 'Moradia, mercado, etc.');
+
+    setText('card-dark-kpi3-label', 'Saldo Pessoal');
+    setText('kpi-saldo-pessoal', formatBRL(saldoPessoal));
+    setText('card-dark-kpi3-sub', 'Sobra / Reserva pessoal');
+
+    setText('card-dark-tip', 'Dica: Mantenha sempre a conta da empresa separada da sua conta pessoal.');
+    const linkBtn = document.getElementById('card-dark-link');
+    if (linkBtn) {
+      linkBtn.innerHTML = 'Ver Detalhes <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>';
+      linkBtn.setAttribute('onclick', "switchTab('pessoal')");
+    }
+  } else {
+    setText('card-dark-badge', 'Fluxo de Caixa Corporativo (Pessoa Jurídica)');
+    const btnAction = document.getElementById('card-dark-btn-action');
+    if (btnAction) {
+      btnAction.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Nova Despesa PJ';
+      btnAction.setAttribute('onclick', "openNewDespesa()");
+      btnAction.style.display = '';
+    }
+    setText('card-dark-kpi1-label', 'Total Entradas PJ');
+    setText('kpi-retirada-empresa', formatBRL(recebidoEfetivo + totalOutros));
+    setText('card-dark-kpi1-sub', 'Atendimentos + Extras');
+
+    setText('card-dark-kpi2-label', 'Despesas Operacionais');
+    setText('kpi-gastos-pessoais', formatBRL(totalDespesas));
+    setText('card-dark-kpi2-sub', 'Custos pagos no mês');
+
+    setText('card-dark-kpi3-label', 'Saldo Operacional PJ');
+    setText('kpi-saldo-pessoal', formatBRL(lucroOperacional));
+    setText('card-dark-kpi3-sub', 'Resultado líquido');
+
+    setText('card-dark-tip', 'Dica Corporativa: Monitore custos e prazos de recebimento para manter o caixa da empresa saudável.');
+    const linkBtn = document.getElementById('card-dark-link');
+    if (linkBtn) {
+      linkBtn.innerHTML = 'Ver Despesas PJ <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>';
+      linkBtn.setAttribute('onclick', "switchTab('despesas')");
+    }
+  }
 
   // Progresso da Meta de Faturamento
   const metaFat = parseFloat(metas.faturamento) || 5000;
