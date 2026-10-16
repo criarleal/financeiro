@@ -907,7 +907,6 @@ function hideDemoBanner(permanent = false) {
 
 function dismissDemoBanner() {
   hideDemoBanner();
-  showToast('Modo Teste ativo no navegador. Para salvar na nuvem, clique em "Entrar" no topo!', 'info');
 }
 
 function revealDemoBanner() {
@@ -918,10 +917,18 @@ function revealDemoBanner() {
   requestAnimationFrame(() => {
     banner.classList.remove('translate-y-full');
     banner.classList.add('translate-y-0');
-    banner.classList.add('ring-2', 'ring-[#D4888C]');
-    setTimeout(() => {
-      banner.classList.remove('ring-2', 'ring-[#D4888C]');
-    }, 1500);
+    const contentTargets = banner.querySelectorAll('.demo-banner-content');
+    if (contentTargets.length > 0) {
+      contentTargets.forEach(el => el.classList.add('ring-2', 'ring-[#D4888C]'));
+      setTimeout(() => {
+        contentTargets.forEach(el => el.classList.remove('ring-2', 'ring-[#D4888C]'));
+      }, 1500);
+    } else {
+      banner.classList.add('ring-2', 'ring-[#D4888C]');
+      setTimeout(() => {
+        banner.classList.remove('ring-2', 'ring-[#D4888C]');
+      }, 1500);
+    }
   });
 }
 
