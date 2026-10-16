@@ -197,6 +197,12 @@ function initModularSystem() {
     state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.estetica));
   }
 
+  // Sanitização automática: remove nome legado se estiver em cache local
+  if (state.config && state.config.appName === 'Beatriz Leal Beauty') {
+    state.config.appName = 'Studio de Estética & Beleza';
+    localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+  }
+
   // Inicializa Supabase se configurado
   if (state.supabaseUrl && state.supabaseKey && window.supabase) {
     try {
@@ -301,7 +307,7 @@ function applyModularUI() {
 
   // Rodapé Dinâmico Executivo
   setText('footer-branding-text', `© 2026 ${cfg.appName || 'Finanças'} — Gestão Financeira Exclusiva`);
-  setText('footer-app-title', cfg.appName || 'Beatriz Leal Beauty');
+  setText('footer-app-title', cfg.appName || 'Painel Financeiro');
   setText('footer-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa');
   const footerLogoIcon = document.getElementById('footer-logo-icon');
   if (footerLogoIcon) {
