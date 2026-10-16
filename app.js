@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Adicionado Módulo/Preset 100% Empresa)
-const APP_VERSION = '1.3.7';
+// Versão da Aplicação (Atualizada para Cache Busting - Padrão Mobile Catálogo de Serviços)
+const APP_VERSION = '1.4.0';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -516,35 +516,89 @@ function handleHeaderQuickAction() {
 // Gerenciamento de Catálogo de Serviços
 function renderCatalogoTable() {
   const tbody = document.getElementById('tbody-catalogo-servicos');
-  if (!tbody) return;
+  const cards = document.getElementById('cards-catalogo-servicos');
+  if (!tbody && !cards) return;
 
   const catalog = state.config?.catalogo || [];
   if (catalog.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="py-4 text-center text-gray-400 text-xs italic">
-          Nenhum serviço cadastrado no seu catálogo ainda. Clique em "+ Adicionar Serviço" acima.
-        </td>
-      </tr>
-    `;
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="py-4 text-center text-gray-400 text-xs italic">
+            Nenhum serviço cadastrado no seu catálogo ainda. Clique em "Adicionar Serviço" acima.
+          </td>
+        </tr>
+      `;
+    }
+    if (cards) {
+      cards.innerHTML = `
+        <div class="card-lux p-6 text-center text-gray-400 font-light text-xs italic">
+          Nenhum serviço cadastrado no seu catálogo ainda. Toque em "Adicionar Serviço" acima.
+        </div>
+      `;
+    }
     return;
   }
 
-  tbody.innerHTML = catalog.map((item, idx) => `
-    <tr class="hover:bg-stone-50 transition row-clickable cursor-pointer" onclick="handleCatalogoRowClick(event, ${idx})" title="Clique para editar este serviço">
-      <td class="py-2.5 px-3 font-semibold text-gray-800">${item.nome}</td>
-      <td class="py-2.5 px-3 font-bold text-gray-900">${formatBRL(item.valor)}</td>
-      <td class="py-2.5 px-3 text-stone-600">${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}</td>
-      <td class="py-2.5 px-3 text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
-        <button onclick="openEditCatalogoItem(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Serviço">
-          <i class="fa-regular fa-pen-to-square text-xs"></i>
-        </button>
-        <button onclick="removeCatalogoItem(${idx})" class="text-rose-500 hover:text-rose-700 p-1 transition-colors" title="Remover Serviço">
-          <i class="fa-solid fa-trash text-xs"></i>
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = catalog.map((item, idx) => `
+      <tr class="hover:bg-stone-50 transition row-clickable cursor-pointer" onclick="handleCatalogoRowClick(event, ${idx})" title="Clique para editar este serviço">
+        <td class="py-2.5 px-3 font-semibold text-gray-800">${item.nome}</td>
+        <td class="py-2.5 px-3 font-bold text-gray-900">${formatBRL(item.valor)}</td>
+        <td class="py-2.5 px-3 text-stone-600">${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}</td>
+        <td class="py-2.5 px-3 text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
+          <button onclick="openEditCatalogoItem(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Serviço">
+            <i class="fa-regular fa-pen-to-square text-xs"></i>
+          </button>
+          <button onclick="removeCatalogoItem(${idx})" class="text-rose-500 hover:text-rose-700 p-1 transition-colors" title="Remover Serviço">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 2. Cards Mobile Exclusivos (Sem rolagem lateral)
+  if (cards) {
+    cards.innerHTML = catalog.map((item, idx) => `
+      <div class="card-lux mobile-card card-clickable p-4 space-y-3" onclick="handleCatalogoRowClick(event, ${idx})" title="Toque para editar">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-[#D4888C] shrink-0 mt-0.5">
+              <i class="fa-solid fa-sparkles text-xs"></i>
+            </div>
+            <div>
+              <span class="text-[10px] text-gray-400 uppercase font-semibold block tracking-wider">Serviço / Procedimento</span>
+              <h4 class="font-bold text-gray-900 text-sm mt-0.5 leading-snug">${item.nome}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-stone-50/80 p-2.5 rounded-xl border border-black/5">
+            <span class="text-[10px] text-gray-400 uppercase font-semibold block">Valor Sugerido</span>
+            <span class="font-bold text-gray-900 text-sm">${formatBRL(item.valor)}</span>
+          </div>
+          <div class="bg-stone-50/80 p-2.5 rounded-xl border border-black/5">
+            <span class="text-[10px] text-gray-400 uppercase font-semibold block">Sinal Sugerido</span>
+            <span class="font-bold ${item.sinal > 0 ? 'text-[#C5A059]' : 'text-stone-500'} text-sm">
+              ${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 no-row-click" onclick="event.stopPropagation()">
+          <button onclick="openEditCatalogoItem(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+            <i class="fa-regular fa-pen-to-square"></i> Editar
+          </button>
+          <button onclick="removeCatalogoItem(${idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 function handleCatalogoRowClick(event, idx) {
@@ -560,7 +614,7 @@ function handleDeleteCatalogoFromModal() {
   const item = state.config?.catalogo?.[idx];
   const nome = item?.nome || 'este serviço';
   if (!confirm(`Deseja realmente excluir "${nome}" do catálogo?`)) return;
-  removeCatalogoItem(idx);
+  removeCatalogoItem(idx, false);
   closeModal('modal-add-catalogo');
 }
 
@@ -692,8 +746,16 @@ function submitAddCatalogoItem(e) {
   }
 }
 
-function removeCatalogoItem(idx) {
+function removeCatalogoItem(idx, askConfirm = true) {
   if (!state.config?.catalogo) return;
+  const item = state.config.catalogo[idx];
+  if (!item) return;
+
+  if (askConfirm) {
+    const nome = item.nome || 'este serviço';
+    if (!confirm(`Deseja realmente excluir "${nome}" do catálogo?`)) return;
+  }
+
   const removed = state.config.catalogo.splice(idx, 1);
   localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
   renderCatalogoTable();

@@ -46,7 +46,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Custom Styles com versão -->
-  <link rel="stylesheet" href="./styles.css?v=1.3.9">
+  <link rel="stylesheet" href="./styles.css?v=1.4.0">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -1249,12 +1249,13 @@
             </h3>
             <p class="text-xs text-gray-500">Adicione os serviços que você oferece para preenchimento rápido em 1 clique.</p>
           </div>
-          <button onclick="openModalAddCatalogoItem()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-plus text-[#D4888C]"></i> + Adicionar Serviço
+          <button onclick="openModalAddCatalogoItem()" class="rose-button px-4 py-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition self-start sm:self-auto">
+            <i class="fa-solid fa-plus"></i> Adicionar Serviço
           </button>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Modo Desktop: Tabela Luxo de Catálogo -->
+        <div class="overflow-x-auto hidden md:block">
           <table class="w-full text-left lux-table text-xs">
             <thead>
               <tr class="bg-stone-50 border-b border-black/5">
@@ -1268,6 +1269,11 @@
               <!-- Renderizado via app.js -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Modo Mobile: Cards de Catálogo (Sem rolagem lateral) -->
+        <div id="cards-catalogo-servicos" class="space-y-3 md:hidden">
+          <!-- Renderizado via app.js -->
         </div>
       </div>
 
@@ -1945,7 +1951,7 @@
   <div id="toast-container" class="fixed bottom-24 sm:bottom-20 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm sm:max-w-md"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.3.9"></script>
+  <script src="./app.js?v=1.4.0"></script>
 </body>
 
 </html>
