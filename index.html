@@ -46,7 +46,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Custom Styles (Identidade bialealbeauty.com.br com versão) -->
-  <link rel="stylesheet" href="./styles.css?v=1.2.1">
+  <link rel="stylesheet" href="./styles.css?v=1.2.2">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -90,7 +90,7 @@
               <span id="header-perfil-tag" class="hidden sm:inline">Personalizar</span>
             </button>
 
-            <div id="sync-status-badge" onclick="switchTab('config')" class="cursor-pointer" title="Configurar Conexão e Nuvem">
+            <div id="sync-status-badge" onclick="openAuthModal()" class="cursor-pointer" title="Status da Nuvem Supabase">
               <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
                 <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Carregando...
               </span>
