@@ -1327,15 +1327,23 @@ function normalizeFullDataset(raw) {
 function checkAppVersion() {
   const savedVersion = localStorage.getItem('bia_app_version');
   if (savedVersion !== APP_VERSION) {
-    console.log(`[BiaLeal] Atualizando versão de ${savedVersion || 'v1.0.0'} para ${APP_VERSION}. Limpando cache antigo.`);
+    console.log(`[Financeiro] Atualizando versão de ${savedVersion || 'v1.0.0'} para ${APP_VERSION}. Limpando cache antigo.`);
     localStorage.setItem('bia_app_version', APP_VERSION);
     localStorage.removeItem('bia_fin_data');
+    const savedCfg = localStorage.getItem('saas_fin_config');
+    if (savedCfg && savedCfg.includes('Beatriz Leal Beauty')) {
+      localStorage.removeItem('saas_fin_config');
+    }
   }
 }
 
 // Forçar Atualização e Limpeza de Cache Manual
 function forceAppRefresh() {
   localStorage.removeItem('bia_fin_data');
+  const savedCfg = localStorage.getItem('saas_fin_config');
+  if (savedCfg && savedCfg.includes('Beatriz Leal Beauty')) {
+    localStorage.removeItem('saas_fin_config');
+  }
   showToast('Cache limpo! Recarregando dados frescos...');
   if (state.apiUrl) {
     syncWithGoogleSheets(true);

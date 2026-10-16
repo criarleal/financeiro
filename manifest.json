@@ -1,7 +1,7 @@
 {
-  "name": "Finanças — Beatriz Leal Beauty",
+  "name": "Painel Financeiro Executivo",
   "short_name": "Finanças",
-  "description": "Painel financeiro exclusivo e gestão executiva de caixa para Beatriz Leal Beauty",
+  "description": "Painel financeiro profissional para controle de caixa, atendimentos e metas.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
