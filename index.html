@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Finanças | Beatriz Leal Beauty</title>
-  <meta name="description" content="Painel executivo financeiro exclusivo para Beatriz Leal Beauty com sincronização Google Sheets.">
+  <title>Painel Financeiro | Gestão Executiva</title>
+  <meta name="description" content="Painel financeiro executivo e gestão de caixa profissional com isolamento seguro na nuvem.">
 
   <!-- Progressive Web App (PWA) & Atalho Mobile -->
   <link rel="manifest" href="./manifest.json?v=1.2.0">
@@ -45,8 +45,8 @@
   <!-- Supabase JS Client (Nuvem / Multi-usuário) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Custom Styles (Identidade bialealbeauty.com.br com versão) -->
-  <link rel="stylesheet" href="./styles.css?v=1.2.2">
+  <!-- Custom Styles com versão -->
+  <link rel="stylesheet" href="./styles.css?v=1.2.4">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -64,7 +64,7 @@
             <i id="header-logo-icon" class="fa-solid fa-sparkles text-sm sm:text-base"></i>
           </div>
           <div class="border-l border-white/20 pl-3">
-            <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[170px] sm:max-w-none">Beatriz Leal Beauty</span>
+            <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[170px] sm:max-w-none">Painel Financeiro</span>
             <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[170px] sm:max-w-none">Gestão Financeira & Caixa</span>
           </div>
         </div>
@@ -532,7 +532,7 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
         <div>
           <span class="badge-dark px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
-            Beatriz Leal - Pessoa Física
+            Gestão Pessoal - Pessoa Física
           </span>
           <h2 class="text-2xl font-bold text-gray-900 serif">Finanças Pessoais & Pró-labore</h2>
         </div>
@@ -596,7 +596,7 @@
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Meta de Reserva de Emergência (R$)</label>
             <input type="number" id="input-meta-res" step="500" class="lux-input w-full text-lg font-bold text-gray-900" required>
-            <p class="text-xs text-gray-400 mt-1">Colchão financeiro para segurança do seu estúdio.</p>
+            <p class="text-xs text-gray-400 mt-1">Colchão financeiro para segurança do seu negócio.</p>
           </div>
 
           <div>
@@ -612,14 +612,14 @@
 
         <div class="card-dark p-6 flex flex-col justify-between">
           <div>
-            <h3 class="serif text-xl font-bold text-[#D4888C] mb-3">Filosofia Financeira Beatriz Leal</h3>
+            <h3 class="serif text-xl font-bold text-[#D4888C] mb-3">Filosofia & Gestão Financeira</h3>
             <p class="text-sm text-white/80 leading-relaxed mb-4">
-              Um negócio de beleza próspero não depende apenas de uma agenda cheia, mas sim da clareza absoluta entre o que é da <strong>empresa</strong> e o que é seu como <strong>profissional</strong>.
+              Um negócio próspero não depende apenas de uma agenda cheia, mas sim da clareza absoluta entre o que é da <strong>empresa</strong> e o que é seu como <strong>profissional</strong>.
             </p>
             <ul class="text-xs text-white/70 space-y-3">
               <li class="flex items-start gap-2">
                 <i class="fa-solid fa-check text-[#D4888C] mt-1"></i>
-                <span><strong>Separação de Caixas:</strong> Pague as despesas do estúdio apenas com o caixa da empresa.</span>
+                <span><strong>Separação de Caixas:</strong> Pague as despesas da atividade apenas com o caixa da empresa.</span>
               </li>
               <li class="flex items-start gap-2">
                 <i class="fa-solid fa-check text-[#D4888C] mt-1"></i>
@@ -867,65 +867,39 @@
         </div>
       </div>
 
-      <!-- SEÇÃO 4: SUPABASE (NUVEM, CONTAS SEPARADAS & RLS) -->
-      <div class="card-lux p-6 space-y-6">
+      <!-- SEÇÃO 4: CONTA E NUVEM (INTERFACE AMIGÁVEL & SEGURA) -->
+      <div class="card-lux p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/5">
           <div>
-            <span class="badge-gold px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
-              Backend Gratuito Supabase
+            <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+              Segurança & Nuvem
             </span>
-            <h3 class="serif text-lg font-bold text-gray-900">Nuvem & Contas Individuais com Supabase</h3>
-            <p class="text-xs text-gray-500">Conecte seu projeto do Supabase para ter login por e-mail/senha com isolamento seguro (RLS) para cada usuário ou empresa.</p>
+            <h3 class="serif text-lg font-bold text-gray-900">Sincronização em Nuvem</h3>
+            <p class="text-xs text-gray-500">Seus lançamentos, despesas e relatórios salvos com criptografia e isolamento individual.</p>
           </div>
 
-          <div id="badge-supabase-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
-            <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local (Demonstração)
+          <div id="badge-supabase-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> Nuvem Conectada
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Project URL</label>
-              <input type="text" id="supabase-config-url" value="https://vvpmwpgvdcdutzlofnwx.supabase.co" placeholder="https://vvpmwpgvdcdutzlofnwx.supabase.co" class="lux-input w-full text-xs font-mono">
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Anon Public Key</label>
-              <input type="password" id="supabase-config-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2cG13cGd2ZGNkdXR6bG9mbnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMTE2NTIsImV4cCI6MjEwNzY4NzY1Mn0.mjCEhG4Kxb1S58oLeTZa5ms8w7yBbbWSdvsBEP_ecM8" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="lux-input w-full text-xs font-mono">
-            </div>
-
-            <div class="flex gap-2 pt-1">
-              <button onclick="saveSupabaseConfig()" class="rose-button flex-1 py-2 rounded-xl text-xs font-bold">
-                Salvar Chaves
-              </button>
-              <button onclick="testSupabaseConnection()" class="gold-button flex-1 py-2 rounded-xl text-xs font-bold">
-                Testar Conexão
-              </button>
-            </div>
-
-            <div class="pt-1">
-              <button onclick="openAuthModal()" class="w-full py-2.5 rounded-xl bg-stone-900 text-white hover:bg-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm">
-                <i class="fa-solid fa-user-lock text-[#D4888C]"></i> Acessar Conta / Gerenciar Usuários
-              </button>
-            </div>
-          </div>
-
-          <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 text-xs text-stone-600 space-y-2.5">
-            <div class="font-bold text-stone-800 flex items-center gap-2">
-              <i class="fa-solid fa-database text-[#D4888C]"></i> Banco de Dados PostgreSQL Pronto
-            </div>
-            <p class="leading-relaxed">
-              O arquivo <code class="bg-stone-200 px-1 py-0.5 rounded text-rose-700 font-mono">supabase_schema.sql</code> já foi gerado na raiz do repositório. Basta copiá-lo e executá-lo no SQL Editor do Supabase para criar as tabelas e regras de segurança (RLS).
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-stone-50 rounded-2xl border border-stone-200/80">
+          <div class="space-y-1 text-center sm:text-left">
+            <h4 class="font-bold text-sm text-gray-900 flex items-center justify-center sm:justify-start gap-2">
+              <i class="fa-solid fa-shield-halved text-[#D4888C]"></i> Proteção de Dados com Acesso Exclusivo
+            </h4>
+            <p class="text-xs text-gray-600">
+              Acesse sua conta para manter seus lançamentos sincronizados em qualquer dispositivo com privacidade total.
             </p>
-            <div class="pt-2 flex flex-wrap items-center gap-2">
-              <button onclick="downloadSupabaseSQL()" class="px-3.5 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 text-[11px] font-semibold flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-download"></i> Baixar Script supabase_schema.sql
-              </button>
-              <button onclick="forceAppRefresh()" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold flex items-center gap-1.5 transition border border-stone-200" title="Limpar cache local do navegador">
-                <i class="fa-solid fa-arrows-rotate text-[#D4888C]"></i> Limpar Cache
-              </button>
-            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openAuthModal()" class="px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-black font-bold text-xs flex items-center gap-2 transition shadow-sm">
+              <i class="fa-solid fa-user-lock text-[#D4888C]"></i> Acessar Minha Conta
+            </button>
+            <button onclick="forceAppRefresh()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition border border-stone-200" title="Atualizar dados e limpar cache">
+              <i class="fa-solid fa-arrows-rotate text-[#D4888C]"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -1037,14 +1011,14 @@
       <!-- Barra Inferior de Copyright & Versão -->
       <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-400">
         <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
-          <span id="footer-branding-text" class="font-medium text-stone-300">© 2026 Beatriz Leal Beauty — Gestão Financeira Exclusiva</span>
+          <span id="footer-branding-text" class="font-medium text-stone-300">© 2026 Painel Financeiro — Gestão Financeira Exclusiva</span>
           <span class="hidden sm:inline text-stone-600">•</span>
           <span class="text-stone-500">Todos os direitos reservados</span>
         </div>
 
         <div class="flex items-center gap-4">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-stone-300 font-mono text-[11px] border border-white/10">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.2.3 • Nuvem Supabase
+            <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.2.4 • Nuvem Supabase
           </span>
 
           <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-stone-300 hover:text-white transition text-xs flex items-center gap-1.5 border border-white/10 group shadow-sm" title="Voltar ao início">
@@ -1374,17 +1348,18 @@
     </div>
   </div>
 
-  <!-- Modal Adicionar Item ao Catálogo -->
+  <!-- Modal Adicionar / Editar Item ao Catálogo -->
   <div id="modal-add-catalogo" class="modal-backdrop hidden fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="card-lux w-full max-w-md p-6 space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-black/5">
-        <h3 class="serif text-base font-bold text-gray-900">Novo Serviço / Item do Catálogo</h3>
+        <h3 id="modal-cat-title" class="serif text-base font-bold text-gray-900">Novo Serviço / Item do Catálogo</h3>
         <button onclick="closeModal('modal-add-catalogo')" class="text-gray-400 hover:text-gray-600">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <form onsubmit="submitAddCatalogoItem(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="modal-cat-index" value="">
         <div>
           <label class="block font-semibold text-gray-700 mb-1">Nome do Serviço</label>
           <input type="text" id="modal-cat-nome" placeholder="Ex: Corte Degradê, Alongamento Gel, Consulta" class="lux-input w-full text-xs" required>
@@ -1403,7 +1378,7 @@
 
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="closeModal('modal-add-catalogo')" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>
-          <button type="submit" class="rose-button px-5 py-2 rounded-xl font-bold">Adicionar ao Catálogo</button>
+          <button type="submit" id="modal-cat-submit-btn" class="rose-button px-5 py-2 rounded-xl font-bold">Adicionar ao Catálogo</button>
         </div>
       </form>
     </div>
@@ -1502,7 +1477,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.2.3"></script>
+  <script src="./app.js?v=1.2.4"></script>
 </body>
 
 </html>
