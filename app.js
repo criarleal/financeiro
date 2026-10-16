@@ -299,8 +299,14 @@ function applyModularUI() {
     secaoCatalogo.style.display = cfg.modules?.operacoes ? '' : 'none';
   }
 
-  // Rodapé
+  // Rodapé Dinâmico Executivo
   setText('footer-branding-text', `© 2026 ${cfg.appName || 'Finanças'} — Gestão Financeira Exclusiva`);
+  setText('footer-app-title', cfg.appName || 'Beatriz Leal Beauty');
+  setText('footer-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa');
+  const footerLogoIcon = document.getElementById('footer-logo-icon');
+  if (footerLogoIcon) {
+    footerLogoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sparkles'} text-base`;
+  }
 
   renderCatalogoTable();
   populateProcedimentosSelect();
