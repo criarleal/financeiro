@@ -6,7 +6,7 @@
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth + Persistência de Abas)
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.3.4';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -565,7 +565,12 @@ function submitAddCatalogoItem(e) {
       closeModal('modal-add-catalogo');
       renderCatalogoTable();
       populateProcedimentosSelect();
-      showToast(`Serviço "${nome}" atualizado com sucesso!`);
+      if (state.currentUser) {
+        showToast(`Serviço "${nome}" atualizado com sucesso!`);
+      } else {
+        showToast(`Serviço "${nome}" atualizado localmente (Modo Teste). Faça login para salvar na nuvem!`, 'info');
+        revealDemoBanner();
+      }
 
       // Se logado no Supabase, atualiza ou insere na nuvem
       if (state.currentUser && state.supabaseClient) {
@@ -782,30 +787,74 @@ function showAuthFeedback(msg, type = 'error') {
 
 function updateAuthNavbarUI(user) {
   const pill = document.getElementById('auth-user-pill');
-  if (!pill) return;
-
-  if (user) {
-    const displayName = user.user_metadata?.nome || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
-    pill.innerHTML = `
-      <div class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-white text-xs font-semibold shadow-sm">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="max-w-[100px] sm:max-w-[130px] truncate font-medium text-emerald-200" title="${user.email}">${displayName}</span>
-        <button onclick="handleSupabaseLogout()" class="text-white/60 hover:text-rose-400 transition ml-1 p-0.5" title="Sair da conta">
-          <i class="fa-solid fa-right-from-bracket text-xs"></i>
+  if (pill) {
+    if (user) {
+      const displayName = user.user_metadata?.nome || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+      pill.innerHTML = `
+        <div class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-white text-xs font-semibold shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="max-w-[100px] sm:max-w-[130px] truncate font-medium text-emerald-200" title="${user.email}">${displayName}</span>
+          <button onclick="handleSupabaseLogout()" class="text-white/60 hover:text-rose-400 transition ml-1 p-0.5" title="Sair da conta">
+            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+          </button>
+        </div>
+      `;
+      updateSupabaseStatusBadge(true);
+      updateSyncBadge('supabase');
+      hideDemoBanner(true);
+    } else {
+      pill.innerHTML = `
+        <button onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-2 transition border border-white/15 shadow-sm hover:border-[#D4888C]" title="Acessar ou Criar Conta">
+          <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
+          <span class="hidden sm:inline">Entrar / Cadastrar</span>
         </button>
-      </div>
-    `;
-    updateSupabaseStatusBadge(true);
-    updateSyncBadge('supabase');
-  } else {
-    pill.innerHTML = `
-      <button onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-2 transition border border-white/15 shadow-sm hover:border-[#D4888C]" title="Acessar ou Criar Conta">
-        <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
-        <span class="hidden sm:inline">Entrar / Cadastrar</span>
-      </button>
-    `;
-    updateSupabaseStatusBadge(false);
+      `;
+      updateSupabaseStatusBadge(false);
+      showDemoBanner();
+    }
   }
+}
+
+// --- CONTROLE DA BARRA DE AVISO: MODO DEMONSTRAÇÃO / TESTE ---
+function showDemoBanner() {
+  if (state.currentUser) return;
+  const banner = document.getElementById('demo-mode-bottom-bar');
+  if (!banner) return;
+  banner.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    banner.classList.remove('translate-y-full');
+    banner.classList.add('translate-y-0');
+  });
+}
+
+function hideDemoBanner(permanent = false) {
+  const banner = document.getElementById('demo-mode-bottom-bar');
+  if (!banner) return;
+  banner.classList.remove('translate-y-0');
+  banner.classList.add('translate-y-full');
+  setTimeout(() => {
+    banner.classList.add('hidden');
+  }, 300);
+}
+
+function dismissDemoBanner() {
+  hideDemoBanner();
+  showToast('Modo Teste ativo no navegador. Para salvar na nuvem, clique em "Entrar" no topo!', 'info');
+}
+
+function revealDemoBanner() {
+  if (state.currentUser) return;
+  const banner = document.getElementById('demo-mode-bottom-bar');
+  if (!banner) return;
+  banner.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    banner.classList.remove('translate-y-full');
+    banner.classList.add('translate-y-0');
+    banner.classList.add('ring-2', 'ring-[#D4888C]');
+    setTimeout(() => {
+      banner.classList.remove('ring-2', 'ring-[#D4888C]');
+    }, 1500);
+  });
 }
 
 async function handleAuthSubmit(event) {
@@ -2244,7 +2293,9 @@ function renderDespesasTable() {
   const cards = document.getElementById('cards-despesas');
   if (!tbody && !cards) return;
 
-  const list = filterByPeriod(state.data.despesas || []);
+  let list = filterByPeriod(state.data.despesas || []);
+  list = sortItemList(list, 'data', 'desc');
+
   if (list.length === 0) {
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-light">Nenhuma despesa registrada para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma despesa registrada para este período.</div>`;
@@ -2255,6 +2306,7 @@ function renderDespesasTable() {
   if (tbody) {
     tbody.innerHTML = list.map((d, idx) => {
       const dataFmt = formatDateBR(d.data);
+      const itemKey = d._id || d._rowIndex || idx;
 
       return `
         <tr class="hover:bg-rose-50/20 transition-colors">
@@ -2264,10 +2316,10 @@ function renderDespesasTable() {
           <td class="font-bold text-rose-600">${formatBRL(d.valor)}</td>
           <td class="text-xs text-gray-600">${d.formaPagamento} ${d.parcelas && d.parcelas !== 'À vista' ? `(${d.parcelas})` : ''}</td>
           <td class="text-right whitespace-nowrap">
-            <button onclick="openEditDespesa(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Despesa">
+            <button onclick="openEditDespesa('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Despesa">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
-            <button onclick="deleteItem('Despesas', ${d._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+            <button onclick="deleteItem('Despesas', '${itemKey}')" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </td>
@@ -2280,6 +2332,7 @@ function renderDespesasTable() {
   if (cards) {
     cards.innerHTML = list.map((d, idx) => {
       const dataFmt = formatDateBR(d.data);
+      const itemKey = d._id || d._rowIndex || idx;
 
       return `
         <div class="card-lux mobile-card p-4 space-y-2.5">
@@ -2305,10 +2358,10 @@ function renderDespesasTable() {
           ${d.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5 italic">${d.observacoes}</p>` : ''}
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
-            <button onclick="openEditDespesa(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+            <button onclick="openEditDespesa('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
-            <button onclick="deleteItem('Despesas', ${d._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+            <button onclick="deleteItem('Despesas', '${itemKey}')" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -2324,7 +2377,9 @@ function renderOutrosTable() {
   const cards = document.getElementById('cards-outros');
   if (!tbody && !cards) return;
 
-  const list = filterByPeriod(state.data.outros || []);
+  let list = filterByPeriod(state.data.outros || []);
+  list = sortItemList(list, 'data', 'desc');
+
   if (list.length === 0) {
     if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 font-light">Nenhuma receita extra registrada para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma receita extra registrada para este período.</div>`;
@@ -2335,6 +2390,7 @@ function renderOutrosTable() {
   if (tbody) {
     tbody.innerHTML = list.map((o, idx) => {
       const dataFmt = formatDateBR(o.data);
+      const itemKey = o._id || o._rowIndex || idx;
 
       return `
         <tr class="hover:bg-rose-50/20 transition-colors">
@@ -2343,10 +2399,10 @@ function renderOutrosTable() {
           <td class="font-bold text-emerald-600">${formatBRL(o.valor)}</td>
           <td class="text-xs text-gray-500">${o.observacoes}</td>
           <td class="text-right whitespace-nowrap">
-            <button onclick="openEditReceitaExtra(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Receita Extra">
+            <button onclick="openEditReceitaExtra('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Receita Extra">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
-            <button onclick="deleteItem('Outros', ${o._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+            <button onclick="deleteItem('Outros', '${itemKey}')" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </td>
@@ -2359,6 +2415,7 @@ function renderOutrosTable() {
   if (cards) {
     cards.innerHTML = list.map((o, idx) => {
       const dataFmt = formatDateBR(o.data);
+      const itemKey = o._id || o._rowIndex || idx;
 
       return `
         <div class="card-lux mobile-card p-4 space-y-2.5">
@@ -2376,10 +2433,10 @@ function renderOutrosTable() {
           ${o.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5">${o.observacoes}</p>` : ''}
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
-            <button onclick="openEditReceitaExtra(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+            <button onclick="openEditReceitaExtra('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
-            <button onclick="deleteItem('Outros', ${o._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+            <button onclick="deleteItem('Outros', '${itemKey}')" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -2395,7 +2452,9 @@ function renderPessoalTable() {
   const cards = document.getElementById('cards-pessoal');
   if (!tbody && !cards) return;
 
-  const list = filterByPeriod(state.data.pessoal || []);
+  let list = filterByPeriod(state.data.pessoal || []);
+  list = sortItemList(list, 'data', 'desc');
+
   if (list.length === 0) {
     if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 font-light">Nenhum lançamento pessoal registrado para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhum lançamento pessoal registrado para este período.</div>`;
@@ -2410,6 +2469,7 @@ function renderPessoalTable() {
       const badgeTipo = isReceita
         ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
         : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
+      const itemKey = p._id || p._rowIndex || idx;
 
       return `
         <tr class="hover:bg-rose-50/20 transition-colors">
@@ -2419,10 +2479,10 @@ function renderPessoalTable() {
           <td class="font-medium text-gray-800">${p.descricao}</td>
           <td class="font-bold ${isReceita ? 'text-emerald-600' : 'text-gray-800'}">${formatBRL(p.valor)}</td>
           <td class="text-right whitespace-nowrap">
-            <button onclick="openEditPessoal(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Lançamento Pessoal">
+            <button onclick="openEditPessoal('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Lançamento Pessoal">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
-            <button onclick="deleteItem('Pessoal', ${p._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+            <button onclick="deleteItem('Pessoal', '${itemKey}')" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </td>
@@ -2439,6 +2499,7 @@ function renderPessoalTable() {
       const badgeTipo = isReceita
         ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
         : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
+      const itemKey = p._id || p._rowIndex || idx;
 
       return `
         <div class="card-lux mobile-card p-4 space-y-2.5">
@@ -2457,10 +2518,10 @@ function renderPessoalTable() {
           ${p.observacoes ? `<p class="text-xs text-gray-400 italic bg-stone-50 p-2 rounded-lg border border-black/5">${p.observacoes}</p>` : ''}
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
-            <button onclick="openEditPessoal(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+            <button onclick="openEditPessoal('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
-            <button onclick="deleteItem('Pessoal', ${p._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+            <button onclick="deleteItem('Pessoal', '${itemKey}')" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -2708,9 +2769,15 @@ function openNewAtendimento() {
   openModal('modal-novo-atendimento');
 }
 
-function openEditAtendimento(listIndex) {
-  const list = filterByPeriod(state.data.atendimentos || []);
-  const item = list[listIndex];
+function openEditAtendimento(keyOrIndex) {
+  let item = (state.data.atendimentos || []).find(a => 
+    (a._id && String(a._id) === String(keyOrIndex)) || 
+    (a._rowIndex && String(a._rowIndex) === String(keyOrIndex))
+  );
+  if (!item) {
+    const list = filterByPeriod(state.data.atendimentos || []);
+    item = list[keyOrIndex];
+  }
   if (!item) return;
 
   populateProcedimentosSelect();
@@ -3397,19 +3464,29 @@ function showToast(message, type = 'success') {
   if (!container) return;
 
   const toast = document.createElement('div');
-  const bgColor = type === 'success' ? 'bg-[#1A1A1A] text-white border border-[#D4888C]/30' : 'bg-amber-800 text-white';
+  let bgColor = 'bg-[#1A1A1A] text-white border border-[#D4888C]/30';
+  let icon = 'fa-check text-[#D4888C]';
+
+  if (type === 'warning' || type === 'error') {
+    bgColor = 'bg-rose-950 text-white border border-rose-500/40';
+    icon = 'fa-triangle-exclamation text-rose-300';
+  } else if (type === 'info') {
+    bgColor = 'bg-[#1A1818] text-white border border-[#D4888C]/70 shadow-[0_10px_30px_rgba(0,0,0,0.6)]';
+    icon = 'fa-cloud-arrow-up text-[#E8A5A8]';
+  }
   
-  toast.className = `${bgColor} px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium animate-fade-in transition-all`;
+  toast.className = `${bgColor} px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-medium animate-fade-in transition-all`;
   toast.innerHTML = `
-    <i class="fa-solid ${type === 'success' ? 'fa-check text-[#D4888C]' : 'fa-triangle-exclamation text-amber-300'}"></i>
-    <span>${message}</span>
+    <i class="fa-solid ${icon} text-sm sm:text-base shrink-0"></i>
+    <span class="leading-snug">${message}</span>
   `;
 
   container.appendChild(toast);
+  const duration = type === 'info' ? 5000 : 3500;
   setTimeout(() => {
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 400);
-  }, 3500);
+  }, duration);
 }
 
 // Exportar CSV
