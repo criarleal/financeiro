@@ -238,7 +238,7 @@ function applyModularUI() {
     perfilTag.innerText = cfg.nomePerfil || 'Personalizar';
   }
 
-  // 2. Botão de Ação Rápida no Top Header
+  // 2. Botão de Ação Rápida (Dashboard / Novo Atendimento)
   const actionLabel = document.getElementById('header-btn-action-label');
   if (actionLabel) {
     actionLabel.innerText = cfg.modules?.operacoes 
