@@ -8,7 +8,7 @@
   <meta name="description" content="Painel executivo financeiro exclusivo para Beatriz Leal Beauty com sincronização Google Sheets.">
 
   <!-- Progressive Web App (PWA) & Atalho Mobile -->
-  <link rel="manifest" href="./manifest.json?v=1.1.1">
+  <link rel="manifest" href="./manifest.json?v=1.2.0">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -42,8 +42,11 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Supabase JS Client (Nuvem / Multi-usuário) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Custom Styles (Identidade bialealbeauty.com.br com versão) -->
-  <link rel="stylesheet" href="./styles.css?v=1.1.1">
+  <link rel="stylesheet" href="./styles.css?v=1.2.0">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -54,12 +57,14 @@
   <header class="bg-[#1A1A1A] text-white border-b border-[#D4888C]/20 sticky top-0 z-40 shadow-xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
       
-      <!-- Logo e Título -->
+      <!-- Logo e Título com Suporte Modular -->
       <div class="flex items-center gap-3">
-        <img src="./assets/images/logo.png" alt="Beatriz Leal Beauty" class="h-10 md:h-12 w-auto object-contain">
-        <div class="border-l border-white/20 pl-3 hidden sm:block">
-          <span class="text-[10px] uppercase tracking-[0.25em] text-[#D4888C] font-semibold block">Painel Executivo</span>
-          <span class="text-xs text-white/80 font-light">Gestão Financeira & Caixa</span>
+        <div id="header-logo-container" class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md cursor-pointer transition hover:scale-105 shrink-0" onclick="switchTab('modulos')" title="Personalizar Módulos do Sistema">
+          <i id="header-logo-icon" class="fa-solid fa-sparkles text-base"></i>
+        </div>
+        <div class="border-l border-white/20 pl-3">
+          <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[160px] sm:max-w-none">Beatriz Leal Beauty</span>
+          <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[160px] sm:max-w-none">Gestão Financeira & Caixa</span>
         </div>
       </div>
 
@@ -97,20 +102,26 @@
       </div>
 
       <!-- Badge de Status e Ações Rápidas -->
-      <div class="flex items-center gap-3">
-        <div id="sync-status-badge" onclick="switchTab('config')" class="cursor-pointer" title="Clique para configurar o Google Apps Script">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Botão Personalizar Perfil / Módulos -->
+        <button onclick="switchTab('modulos')" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/10 shadow-sm" title="Mudar Perfil ou Módulos do Sistema">
+          <i class="fa-solid fa-shapes text-[#D4888C]"></i>
+          <span id="header-perfil-tag" class="hidden sm:inline">Personalizar</span>
+        </button>
+
+        <div id="sync-status-badge" onclick="switchTab('config')" class="cursor-pointer" title="Configurar Google Apps Script ou Supabase">
           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
             <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Carregando...
           </span>
         </div>
 
-        <button id="btn-sync" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#D4888C] text-white flex items-center justify-center transition shadow" title="Sincronizar com Google Sheets">
+        <button id="btn-sync" class="w-9 h-9 rounded-full bg-white/10 hover:bg-[#D4888C] text-white flex items-center justify-center transition shadow" title="Sincronizar Dados">
           <i class="fa-solid fa-rotate text-xs"></i>
         </button>
 
-        <button onclick="openNewAtendimento()" class="rose-button px-4 py-2 rounded-full text-[11px] flex items-center gap-2">
+        <button id="header-btn-action" onclick="handleHeaderQuickAction()" class="rose-button px-4 py-2 rounded-full text-[11px] flex items-center gap-2">
           <i class="fa-solid fa-plus"></i>
-          <span>Atendimento</span>
+          <span id="header-btn-action-label">Atendimento</span>
         </button>
       </div>
 
@@ -121,27 +132,30 @@
        BARRA DE NAVEGAÇÃO SECUNDÁRIA (TABS)
        ==================================================================== -->
   <nav class="bg-white border-b border-black/5 sticky top-[69px] z-30 shadow-sm overflow-x-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 text-xs font-semibold tracking-wider uppercase">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-6 sm:space-x-8 text-xs font-semibold tracking-wider uppercase whitespace-nowrap">
       <button class="tab-btn py-4 active" data-tab="dashboard">
         <i class="fa-solid fa-chart-pie mr-1.5 text-sm"></i> Visão Geral
       </button>
-      <button class="tab-btn py-4" data-tab="atendimentos">
-        <i class="fa-regular fa-calendar-check mr-1.5 text-sm"></i> Atendimentos
+      <button class="tab-btn py-4" data-tab="atendimentos" id="tab-nav-atendimentos">
+        <i class="fa-regular fa-calendar-check mr-1.5 text-sm"></i> <span id="label-nav-atendimentos">Atendimentos</span>
       </button>
-      <button class="tab-btn py-4" data-tab="despesas">
-        <i class="fa-solid fa-receipt mr-1.5 text-sm"></i> Despesas Empresa
+      <button class="tab-btn py-4" data-tab="despesas" id="tab-nav-despesas">
+        <i class="fa-solid fa-receipt mr-1.5 text-sm"></i> <span id="label-nav-despesas">Despesas Empresa</span>
       </button>
-      <button class="tab-btn py-4" data-tab="outros">
+      <button class="tab-btn py-4" data-tab="outros" id="tab-nav-outros">
         <i class="fa-solid fa-bag-shopping mr-1.5 text-sm"></i> Receitas Extras
       </button>
-      <button class="tab-btn py-4" data-tab="pessoal">
+      <button class="tab-btn py-4" data-tab="pessoal" id="tab-nav-pessoal">
         <i class="fa-solid fa-user-tie mr-1.5 text-sm"></i> Finanças Pessoais
       </button>
-      <button class="tab-btn py-4" data-tab="metas">
+      <button class="tab-btn py-4" data-tab="metas" id="tab-nav-metas">
         <i class="fa-solid fa-bullseye mr-1.5 text-sm"></i> Metas
       </button>
-      <button class="tab-btn py-4" data-tab="config">
-        <i class="fa-solid fa-sliders mr-1.5 text-sm"></i> Conexão Sheets
+      <button class="tab-btn py-4 text-[#D4888C]" data-tab="modulos" id="tab-nav-modulos">
+        <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-sm"></i> Personalizar (SaaS)
+      </button>
+      <button class="tab-btn py-4" data-tab="config" id="tab-nav-config">
+        <i class="fa-solid fa-sliders mr-1.5 text-sm"></i> Conexão / Nuvem
       </button>
     </div>
   </nav>
@@ -186,15 +200,15 @@
         <!-- Card 1: Faturamento Bruto Real (com Sinal incluído) -->
         <div class="card-lux p-6 relative overflow-hidden group">
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Faturamento Bruto</span>
-            <div class="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center text-[#D4888C]">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400" id="kpi-card1-title">Faturamento Bruto</span>
+            <div class="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center text-[#D4888C]" id="kpi-card1-icon">
               <i class="fa-solid fa-chart-line text-sm"></i>
             </div>
           </div>
           <div class="serif text-2xl md:text-3xl font-bold text-gray-900 mb-1" id="kpi-faturamento">R$ 0,00</div>
           <div class="flex items-center justify-between text-xs text-gray-500">
             <span id="kpi-atendimentos-qtd" class="font-medium">0 atendimentos</span>
-            <span class="text-emerald-600 font-semibold flex items-center gap-1">
+            <span class="text-emerald-600 font-semibold flex items-center gap-1" id="kpi-card1-tag">
               <i class="fa-solid fa-sparkles text-[10px]"></i> Total Serviços
             </span>
           </div>
@@ -204,39 +218,39 @@
         <!-- Card 2: Entradas no Caixa vs Pendente -->
         <div class="card-lux p-6 relative overflow-hidden group">
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Recebido no Caixa</span>
-            <div class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-[#C5A059]">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400" id="kpi-card2-title">Recebido no Caixa</span>
+            <div class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-[#C5A059]" id="kpi-card2-icon">
               <i class="fa-solid fa-wallet text-sm"></i>
             </div>
           </div>
           <div class="serif text-2xl md:text-3xl font-bold text-emerald-700 mb-1" id="kpi-recebido-caixa">R$ 0,00</div>
           <div class="flex items-center justify-between text-xs text-gray-500">
-            <span>A Receber:</span>
+            <span id="kpi-card2-sub-label">A Receber:</span>
             <span id="kpi-a-receber" class="font-bold text-amber-600">R$ 0,00</span>
           </div>
           <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C5A059] to-amber-200"></div>
         </div>
 
         <!-- Card 3: Despesas Operacionais da Empresa -->
-        <div class="card-lux p-6 relative overflow-hidden group">
+        <div class="card-lux p-6 relative overflow-hidden group" id="kpi-card3-container">
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Despesas Empresa</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400" id="kpi-card3-title">Despesas Empresa</span>
             <div class="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600">
               <i class="fa-solid fa-receipt text-sm"></i>
             </div>
           </div>
           <div class="serif text-2xl md:text-3xl font-bold text-rose-600 mb-1" id="kpi-despesas-empresa">R$ 0,00</div>
           <div class="flex items-center justify-between text-xs text-gray-500">
-            <span>Custos operacionais</span>
-            <span class="text-stone-400">Insumos & Aluguel</span>
+            <span id="kpi-card3-sub-label">Custos operacionais</span>
+            <span class="text-stone-400" id="kpi-card3-sub-detail">Insumos & Aluguel</span>
           </div>
           <div class="absolute bottom-0 left-0 right-0 h-1 bg-rose-400"></div>
         </div>
 
         <!-- Card 4: Lucro Líquido Real da Empresa -->
-        <div class="card-lux p-6 relative overflow-hidden group bg-gradient-to-br from-white to-stone-50">
+        <div class="card-lux p-6 relative overflow-hidden group bg-gradient-to-br from-white to-stone-50" id="kpi-card4-container">
           <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Lucro Líquido PJ</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500" id="kpi-card4-title">Lucro Líquido PJ</span>
             <div class="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
               <i class="fa-solid fa-coins text-sm"></i>
             </div>
@@ -244,7 +258,7 @@
           <div class="serif text-2xl md:text-3xl font-bold text-gray-900 mb-1" id="kpi-lucro-empresa">R$ 0,00</div>
           <div class="flex items-center justify-between text-xs">
             <span id="kpi-margem-lucro" class="font-bold text-emerald-600">0% margem</span>
-            <span class="text-gray-400 text-[11px]">Antes do Pró-labore</span>
+            <span class="text-gray-400 text-[11px]" id="kpi-card4-sub-detail">Antes do Pró-labore</span>
           </div>
           <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
         </div>
@@ -680,7 +694,7 @@
           <div class="pt-4 border-t border-black/5 flex items-center justify-between">
             <div>
               <span class="text-xs font-bold text-gray-700 block">Cache & Versão do Sistema</span>
-              <span class="text-[11px] text-gray-400">Versão ativa: <span class="font-mono font-bold text-[#D4888C]">v1.1.1</span></span>
+              <span class="text-[11px] text-gray-400">Versão ativa: <span class="font-mono font-bold text-[#D4888C]">v1.2.0</span></span>
             </div>
             <button onclick="forceAppRefresh()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Limpar cache local e recarregar dados do Google Sheets">
               <i class="fa-solid fa-arrows-rotate text-xs text-[#D4888C]"></i> Limpar Cache
@@ -719,6 +733,290 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ==================================================================
+         ABA 8: CENTRAL DE MÓDULOS & PERSONALIZAÇÃO (SAAS UNIVERSAL)
+         ================================================================== -->
+    <div id="tab-modulos" class="tab-content hidden space-y-8 animate-fade-in">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-black/5">
+        <div>
+          <span class="badge-gold px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Arquitetura Modular • SaaS Familiar
+          </span>
+          <h2 class="text-2xl font-bold text-gray-900 serif">Personalizar Painel & Módulos Ativos</h2>
+          <p class="text-xs text-gray-500 mt-1">Adapte o sistema para qualquer profissão ou use no modo 100% pessoal.</p>
+        </div>
+
+        <button onclick="saveModularConfig(true)" class="rose-button px-5 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Minhas Preferências
+        </button>
+      </div>
+
+      <!-- SEÇÃO 1: PERFIS PRONTOS (1 CLIQUE) -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="serif text-base font-bold text-gray-900 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-[#D4888C]"></i> Escolha Rápida de Perfil (Presets da Família)
+          </h3>
+          <span class="text-[11px] text-gray-400">Clique para aplicar a estrutura ideal</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Preset 1: Estética & Beleza (Beatriz) -->
+          <div onclick="selectProfilePreset('estetica')" id="card-preset-estetica" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-rose-50 text-[#D4888C] flex items-center justify-center font-bold">
+                <i class="fa-solid fa-sparkles"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-gray-900">Estética & Beleza</h4>
+                <span class="text-[10px] text-gray-500">Irmã (Beatriz)</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Atendimentos de cílios e sobrancelhas, custos PJ, pró-labore e metas.</p>
+            <div class="mt-3 flex flex-wrap gap-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Clientes</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Empresa PJ</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Pessoal PF</span>
+            </div>
+          </div>
+
+          <!-- Preset 2: Barbearia (Pai) -->
+          <div onclick="selectProfilePreset('barbearia')" id="card-preset-barbearia" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#C5A059] flex items-center justify-center font-bold">
+                <i class="fa-solid fa-scissors"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-gray-900">Barbearia</h4>
+                <span class="text-[10px] text-gray-500">Pai</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Cortes, barba, controle de entradas do dia e despesas pessoais sem burocracia PJ.</p>
+            <div class="mt-3 flex flex-wrap gap-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Cortes</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Sem PJ</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Pessoal PF</span>
+            </div>
+          </div>
+
+          <!-- Preset 3: Studio de Unhas (Mãe) -->
+          <div onclick="selectProfilePreset('manicure')" id="card-preset-manicure" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-hand-dots"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-gray-900">Studio de Unhas</h4>
+                <span class="text-[10px] text-gray-500">Mãe</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Alongamentos, manicure, esmaltação e gestão simplificada de recebíveis.</p>
+            <div class="mt-3 flex flex-wrap gap-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Unhas</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Sem PJ</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Pessoal PF</span>
+            </div>
+          </div>
+
+          <!-- Preset 4: Finanças Pessoais (Você) -->
+          <div onclick="selectProfilePreset('pessoal')" id="card-preset-pessoal" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-gray-900">100% Pessoal</h4>
+                <span class="text-[10px] text-gray-500">Você (Sem Clientes)</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Salário, contas da casa, mercado, despesas pessoais e metas de investimento.</p>
+            <div class="mt-3 flex flex-wrap gap-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">Salário</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">Contas Casa</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">Zero Clientes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 2: GRID MODULAR (INTERRUPTORES & DICIONÁRIO) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Bloco de Módulos Ativos -->
+        <div class="card-lux p-6 space-y-4">
+          <h3 class="serif text-lg font-bold text-gray-900 flex items-center gap-2">
+            <i class="fa-solid fa-toggle-on text-[#D4888C]"></i> Módulos Ativos no Seu Painel
+          </h3>
+          <p class="text-xs text-gray-500">Ligue ou desligue o que faz sentido para você. O menu e o dashboard se adaptam instantaneamente.</p>
+
+          <div class="space-y-3 pt-2">
+            <label class="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100/70 border border-black/5 cursor-pointer transition">
+              <div>
+                <span class="text-xs font-bold text-gray-800 block">Operações / Atendimentos a Clientes</span>
+                <span class="text-[11px] text-gray-500">Para quem presta serviços pontuais e cobra clientes</span>
+              </div>
+              <input type="checkbox" id="mod-toggle-operacoes" onchange="handleModuleToggleChange()" class="w-4 h-4 accent-[#D4888C] cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100/70 border border-black/5 cursor-pointer transition">
+              <div>
+                <span class="text-xs font-bold text-gray-800 block">Custos do Negócio (PJ / Despesas da Empresa)</span>
+                <span class="text-[11px] text-gray-500">Controle de insumos, aluguel de sala e custos operacionais</span>
+              </div>
+              <input type="checkbox" id="mod-toggle-empresa" onchange="handleModuleToggleChange()" class="w-4 h-4 accent-[#D4888C] cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100/70 border border-black/5 cursor-pointer transition">
+              <div>
+                <span class="text-xs font-bold text-gray-800 block">Finanças Pessoais (PF / Casa)</span>
+                <span class="text-[11px] text-gray-500">Mercado, moradia, contas, lazer e pró-labore</span>
+              </div>
+              <input type="checkbox" id="mod-toggle-pessoal" onchange="handleModuleToggleChange()" class="w-4 h-4 accent-[#D4888C] cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100/70 border border-black/5 cursor-pointer transition">
+              <div>
+                <span class="text-xs font-bold text-gray-800 block">Receitas Extras & Avulsas</span>
+                <span class="text-[11px] text-gray-500">Vendas pontuais, freelances e entradas esporádicas</span>
+              </div>
+              <input type="checkbox" id="mod-toggle-outros" onchange="handleModuleToggleChange()" class="w-4 h-4 accent-[#D4888C] cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-xl bg-stone-50 hover:bg-stone-100/70 border border-black/5 cursor-pointer transition">
+              <div>
+                <span class="text-xs font-bold text-gray-800 block">Metas Financeiras & Reservas</span>
+                <span class="text-[11px] text-gray-500">Acompanhamento de metas de faturamento e cofrinhos</span>
+              </div>
+              <input type="checkbox" id="mod-toggle-metas" onchange="handleModuleToggleChange()" class="w-4 h-4 accent-[#D4888C] cursor-pointer">
+            </label>
+          </div>
+        </div>
+
+        <!-- Bloco de Dicionário e Identidade -->
+        <div class="card-lux p-6 space-y-4">
+          <h3 class="serif text-lg font-bold text-gray-900 flex items-center gap-2">
+            <i class="fa-solid fa-spell-check text-[#C5A059]"></i> Vocabulário & Identidade do Sistema
+          </h3>
+          <p class="text-xs text-gray-500">Personalize os nomes para que o sistema fale a língua exata da sua profissão.</p>
+
+          <div class="space-y-3 pt-2">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Nome do seu Painel / Espaço</label>
+              <input type="text" id="mod-input-app-name" placeholder="Ex: Barbearia do Leal, Studio Unhas, Minhas Finanças" class="lux-input w-full text-xs">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Subtítulo</label>
+              <input type="text" id="mod-input-app-subtitle" placeholder="Ex: Gestão Financeira & Caixa" class="lux-input w-full text-xs">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Quem te paga?</label>
+                <input type="text" id="mod-input-termo-cliente" placeholder="Ex: Cliente, Paciente, Aluno" class="lux-input w-full text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">O que você entrega?</label>
+                <input type="text" id="mod-input-termo-servico" placeholder="Ex: Atendimento, Corte, Consulta" class="lux-input w-full text-xs">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Termo no Plural</label>
+              <input type="text" id="mod-input-termo-plural" placeholder="Ex: Atendimentos, Cortes, Consultas, Aulas" class="lux-input w-full text-xs">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SEÇÃO 3: CATÁLOGO DINÂMICO DE SERVIÇOS & ITENS -->
+      <div id="secao-catalogo-gerenciador" class="card-lux p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/5">
+          <div>
+            <h3 class="serif text-lg font-bold text-gray-900 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-[#D4888C]"></i> Catálogo de Serviços & Preços Sugeridos
+            </h3>
+            <p class="text-xs text-gray-500">Adicione os serviços que você oferece para preenchimento rápido em 1 clique.</p>
+          </div>
+          <button onclick="openModalAddCatalogoItem()" class="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-plus text-[#D4888C]"></i> + Adicionar Serviço
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left lux-table text-xs">
+            <thead>
+              <tr class="bg-stone-50 border-b border-black/5">
+                <th class="py-2.5 px-3 font-bold text-gray-700">Nome do Serviço / Procedimento</th>
+                <th class="py-2.5 px-3 font-bold text-gray-700">Valor Sugerido</th>
+                <th class="py-2.5 px-3 font-bold text-gray-700">Sinal Sugerido</th>
+                <th class="py-2.5 px-3 font-bold text-gray-700 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-catalogo-servicos" class="divide-y divide-black/5">
+              <!-- Renderizado via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 4: SUPABASE (NUVEM, CONTAS SEPARADAS & RLS) -->
+      <div class="card-lux p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/5">
+          <div>
+            <span class="badge-gold px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+              Backend Gratuito Supabase
+            </span>
+            <h3 class="serif text-lg font-bold text-gray-900">Nuvem & Contas Individuais com Supabase</h3>
+            <p class="text-xs text-gray-500">Conecte seu projeto do Supabase para ter login por e-mail/senha com isolamento seguro (RLS) para cada familiar.</p>
+          </div>
+
+          <div id="badge-supabase-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+            <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local / Planilha
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Project URL</label>
+              <input type="text" id="supabase-config-url" placeholder="https://seu-projeto.supabase.co" class="lux-input w-full text-xs font-mono">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Anon Public Key</label>
+              <input type="password" id="supabase-config-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="lux-input w-full text-xs font-mono">
+            </div>
+
+            <div class="flex gap-2 pt-1">
+              <button onclick="saveSupabaseConfig()" class="rose-button flex-1 py-2 rounded-xl text-xs font-bold">
+                Salvar Chaves
+              </button>
+              <button onclick="testSupabaseConnection()" class="gold-button flex-1 py-2 rounded-xl text-xs font-bold">
+                Testar Supabase
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 text-xs text-stone-600 space-y-2.5">
+            <div class="font-bold text-stone-800 flex items-center gap-2">
+              <i class="fa-solid fa-database text-[#D4888C]"></i> Banco de Dados PostgreSQL Pronto
+            </div>
+            <p class="leading-relaxed">
+              O arquivo <code class="bg-stone-200 px-1 py-0.5 rounded text-rose-700 font-mono">supabase_schema.sql</code> já foi gerado na raiz do repositório. Basta copiá-lo e executá-lo no SQL Editor do Supabase para criar as tabelas e regras de segurança (RLS).
+            </p>
+            <div class="pt-2">
+              <button onclick="downloadSupabaseSQL()" class="px-3.5 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 text-[11px] font-semibold flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-download"></i> Baixar Script supabase_schema.sql
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -1056,11 +1354,46 @@
     </div>
   </div>
 
+  <!-- Modal Adicionar Item ao Catálogo -->
+  <div id="modal-add-catalogo" class="modal-backdrop hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="card-lux w-full max-w-md p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-black/5">
+        <h3 class="serif text-base font-bold text-gray-900">Novo Serviço / Item do Catálogo</h3>
+        <button onclick="closeModal('modal-add-catalogo')" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitAddCatalogoItem(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Nome do Serviço</label>
+          <input type="text" id="modal-cat-nome" placeholder="Ex: Corte Degradê, Alongamento Gel, Consulta" class="lux-input w-full text-xs" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-gray-700 mb-1">Valor Sugerido (R$)</label>
+            <input type="number" step="0.01" id="modal-cat-valor" placeholder="0.00" class="lux-input w-full text-xs" required>
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-700 mb-1">Sinal Sugerido (R$)</label>
+            <input type="number" step="0.01" id="modal-cat-sinal" placeholder="0.00" class="lux-input w-full text-xs" value="0.00">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-add-catalogo')" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>
+          <button type="submit" class="rose-button px-5 py-2 rounded-xl font-bold">Adicionar ao Catálogo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Rodapé Discreto com Versão da Aplicação -->
   <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-gray-400 border-t border-black/5 mt-12 flex flex-col sm:flex-row items-center justify-between gap-2">
-    <span>© 2026 Beatriz Leal Beauty — Gestão Financeira Exclusiva</span>
+    <span id="footer-branding-text">© 2026 Beatriz Leal Beauty — Gestão Financeira Exclusiva</span>
     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 font-mono text-[11px] border border-stone-200">
-      <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.1.1 (Mobile Edition)
+      <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.2.0 (Modular SaaS)
     </span>
   </footer>
 
@@ -1068,7 +1401,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.1.1"></script>
+  <script src="./app.js?v=1.2.0"></script>
 </body>
 
 </html>

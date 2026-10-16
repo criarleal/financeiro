@@ -5,8 +5,155 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting)
-const APP_VERSION = '1.1.1';
+// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS)
+const APP_VERSION = '1.2.0';
+
+// ==============================================================================
+// PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
+// ==============================================================================
+const PERFIS_PRESETS = {
+  estetica: {
+    id: 'estetica',
+    nomePerfil: 'Estética & Beleza',
+    appName: 'Beatriz Leal Beauty',
+    appSubtitle: 'Gestão Financeira & Caixa',
+    logoIcon: 'fa-sparkles',
+    modules: {
+      operacoes: true,
+      empresa: true,
+      pessoal: true,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Atendimento',
+      operacaoPlural: 'Atendimentos',
+      clienteSingular: 'Cliente',
+      clientePlural: 'Clientes',
+      servicoSingular: 'Procedimento',
+      custoNegocio: 'Despesas Empresa'
+    },
+    catalogo: [
+      { nome: 'Design de sobrancelhas', valor: 55, sinal: 30 },
+      { nome: 'Design com henna', valor: 75, sinal: 30 },
+      { nome: 'Lash lifting', valor: 130, sinal: 30 },
+      { nome: 'Brow lamination', valor: 145, sinal: 30 },
+      { nome: 'Extensão de cílios', valor: 190, sinal: 30 },
+      { nome: 'Manutenção de cílios', valor: 100, sinal: 30 },
+      { nome: 'Micropigmentação labial', valor: 350, sinal: 50 },
+      { nome: 'Micropigmentação sobrancelhas', valor: 450, sinal: 50 }
+    ]
+  },
+  barbearia: {
+    id: 'barbearia',
+    nomePerfil: 'Barbearia',
+    appName: 'Barbearia do Leal',
+    appSubtitle: 'Controle de Cortes & Caixa',
+    logoIcon: 'fa-scissors',
+    modules: {
+      operacoes: true,
+      empresa: false,
+      pessoal: true,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Corte',
+      operacaoPlural: 'Cortes',
+      clienteSingular: 'Cliente',
+      clientePlural: 'Clientes',
+      servicoSingular: 'Serviço',
+      custoNegocio: 'Custos Barbearia'
+    },
+    catalogo: [
+      { nome: 'Corte Degradê / Social', valor: 35, sinal: 0 },
+      { nome: 'Barba Modelada / Terapia', valor: 25, sinal: 0 },
+      { nome: 'Combo Corte + Barba', valor: 55, sinal: 0 },
+      { nome: 'Pezinho / Acabamento', valor: 15, sinal: 0 },
+      { nome: 'Sobrancelha na Navalha', valor: 15, sinal: 0 },
+      { nome: 'Pigmentação de Barba', valor: 30, sinal: 0 }
+    ]
+  },
+  manicure: {
+    id: 'manicure',
+    nomePerfil: 'Studio de Unhas',
+    appName: 'Studio Unhas & Nail Design',
+    appSubtitle: 'Gestão de Clientes & Caixa',
+    logoIcon: 'fa-hand-dots',
+    modules: {
+      operacoes: true,
+      empresa: false,
+      pessoal: true,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Atendimento',
+      operacaoPlural: 'Atendimentos',
+      clienteSingular: 'Cliente',
+      clientePlural: 'Clientes',
+      servicoSingular: 'Serviço de Unha',
+      custoNegocio: 'Custos do Studio'
+    },
+    catalogo: [
+      { nome: 'Manicure & Pedicure Simples', valor: 45, sinal: 0 },
+      { nome: 'Alongamento em Gel / Fibra', valor: 130, sinal: 30 },
+      { nome: 'Manutenção de Alongamento', valor: 75, sinal: 0 },
+      { nome: 'Esmaltação em Gel', valor: 50, sinal: 0 },
+      { nome: 'Blindagem de Unhas', valor: 60, sinal: 0 },
+      { nome: 'Spa dos Pés', valor: 40, sinal: 0 }
+    ]
+  },
+  pessoal: {
+    id: 'pessoal',
+    nomePerfil: '100% Pessoal',
+    appName: 'Minhas Finanças Pessoais',
+    appSubtitle: 'Gestão de Receitas, Contas & Metas',
+    logoIcon: 'fa-wallet',
+    modules: {
+      operacoes: false,
+      empresa: false,
+      pessoal: true,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Lançamento',
+      operacaoPlural: 'Lançamentos',
+      clienteSingular: 'Fonte / Pagador',
+      clientePlural: 'Fontes',
+      servicoSingular: 'Item',
+      custoNegocio: 'Custos'
+    },
+    catalogo: []
+  },
+  personalizado: {
+    id: 'personalizado',
+    nomePerfil: 'Personalizado',
+    appName: 'Meu Painel Financeiro',
+    appSubtitle: 'Gestão Financeira Sob Medida',
+    logoIcon: 'fa-cubes',
+    modules: {
+      operacoes: true,
+      empresa: true,
+      pessoal: true,
+      outros: true,
+      metas: true
+    },
+    terms: {
+      operacaoSingular: 'Operação',
+      operacaoPlural: 'Operações',
+      clienteSingular: 'Cliente',
+      clientePlural: 'Clientes',
+      servicoSingular: 'Serviço',
+      custoNegocio: 'Custos da Atividade'
+    },
+    catalogo: []
+  }
+};
+
+// Procedimentos padrão originais (fallback)
+const PROCEDIMENTOS_CATALOGO = PERFIS_PRESETS.estetica.catalogo;
 
 // Estado da Aplicação
 const state = {
@@ -19,7 +166,7 @@ const state = {
   },
   apiUrl: localStorage.getItem('bia_fin_api_url') || 'https://script.google.com/macros/s/AKfycbxNMWhtU06JuOv_E5wuNyIYKr0wIPnRD6qfBl4qMpgKccEc2m4EG9XO5K1brPATYHzO/exec',
   selectedYear: 2026,
-  selectedMonth: 10, // Outubro como padrão (onde estão os dados da planilha)
+  selectedMonth: 10,
   currentTab: 'dashboard',
   isSyncing: false,
   charts: {},
@@ -27,32 +174,370 @@ const state = {
     search: '',
     status: 'all',
     payment: 'all'
-  }
+  },
+  config: null,
+  supabaseUrl: localStorage.getItem('saas_supabase_url') || '',
+  supabaseKey: localStorage.getItem('saas_supabase_key') || '',
+  supabaseClient: null
 };
 
-// Procedimentos padrão e valores sugeridos
-const PROCEDIMENTOS_CATALOGO = [
-  { nome: 'Design de sobrancelhas', valor: 55, sinal: 30 },
-  { nome: 'Design com henna', valor: 75, sinal: 30 },
-  { nome: 'Lash lifting', valor: 130, sinal: 30 },
-  { nome: 'Brow lamination', valor: 145, sinal: 30 },
-  { nome: 'Extensão de cílios', valor: 190, sinal: 30 },
-  { nome: 'Manutenção de cílios', valor: 100, sinal: 30 },
-  { nome: 'Micropigmentação labial', valor: 350, sinal: 50 },
-  { nome: 'Micropigmentação sobrancelhas', valor: 450, sinal: 50 }
-];
+// Inicialização da Configuração Modular
+function initModularSystem() {
+  const saved = localStorage.getItem('saas_fin_config');
+  if (saved) {
+    try {
+      state.config = JSON.parse(saved);
+    } catch (e) {
+      console.warn('Erro ao carregar config modular:', e);
+      state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.estetica));
+    }
+  } else {
+    state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.estetica));
+  }
 
-// Obtém catálogo dinâmico de procedimentos: mescla a lista base com qualquer procedimento já existente na planilha
+  // Inicializa Supabase se configurado
+  if (state.supabaseUrl && state.supabaseKey && window.supabase) {
+    try {
+      state.supabaseClient = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
+    } catch (err) {
+      console.warn('Erro ao inicializar Supabase:', err);
+    }
+  }
+}
+
+// Aplica as configurações do perfil e módulos na interface
+function applyModularUI() {
+  if (!state.config) return;
+
+  const cfg = state.config;
+
+  // 1. Branding do Top Header
+  setText('header-app-title', cfg.appName || 'Meu Painel Financeiro');
+  setText('header-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa');
+  
+  const logoIcon = document.getElementById('header-logo-icon');
+  if (logoIcon) {
+    logoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sparkles'} text-base`;
+  }
+
+  const perfilTag = document.getElementById('header-perfil-tag');
+  if (perfilTag) {
+    perfilTag.innerText = cfg.nomePerfil || 'Personalizar';
+  }
+
+  // 2. Botão de Ação Rápida no Top Header
+  const actionLabel = document.getElementById('header-btn-action-label');
+  if (actionLabel) {
+    actionLabel.innerText = cfg.modules?.operacoes 
+      ? (cfg.terms?.operacaoSingular || 'Atendimento') 
+      : 'Lançamento';
+  }
+
+  // 3. Ocultar/Exibir Abas de Navegação conforme Módulos Ativos
+  setTabVisibility('tab-nav-atendimentos', cfg.modules?.operacoes);
+  setTabVisibility('tab-nav-despesas', cfg.modules?.empresa);
+  setTabVisibility('tab-nav-outros', cfg.modules?.outros);
+  setTabVisibility('tab-nav-pessoal', cfg.modules?.pessoal);
+  setTabVisibility('tab-nav-metas', cfg.modules?.metas);
+
+  // 4. Rótulos das Abas Dinâmicos
+  setText('label-nav-atendimentos', cfg.terms?.operacaoPlural || 'Atendimentos');
+  setText('label-nav-despesas', cfg.terms?.custoNegocio || 'Despesas Empresa');
+
+  // Se o usuário estiver numa aba que foi desligada, redireciona para o dashboard
+  if (state.currentTab === 'atendimentos' && !cfg.modules?.operacoes) switchTab('dashboard');
+  if (state.currentTab === 'despesas' && !cfg.modules?.empresa) switchTab('dashboard');
+  if (state.currentTab === 'outros' && !cfg.modules?.outros) switchTab('dashboard');
+  if (state.currentTab === 'pessoal' && !cfg.modules?.pessoal) switchTab('dashboard');
+  if (state.currentTab === 'metas' && !cfg.modules?.metas) switchTab('dashboard');
+
+  // 5. Preencher os campos da aba de Configuração Modular
+  setChecked('mod-toggle-operacoes', cfg.modules?.operacoes !== false);
+  setChecked('mod-toggle-empresa', cfg.modules?.empresa !== false);
+  setChecked('mod-toggle-pessoal', cfg.modules?.pessoal !== false);
+  setChecked('mod-toggle-outros', cfg.modules?.outros !== false);
+  setChecked('mod-toggle-metas', cfg.modules?.metas !== false);
+
+  setInputValue('mod-input-app-name', cfg.appName || '');
+  setInputValue('mod-input-app-subtitle', cfg.appSubtitle || '');
+  setInputValue('mod-input-termo-cliente', cfg.terms?.clienteSingular || 'Cliente');
+  setInputValue('mod-input-termo-servico', cfg.terms?.servicoSingular || 'Procedimento');
+  setInputValue('mod-input-termo-plural', cfg.terms?.operacaoPlural || 'Atendimentos');
+
+  // Supabase inputs
+  setInputValue('supabase-config-url', state.supabaseUrl || '');
+  setInputValue('supabase-config-key', state.supabaseKey || '');
+  updateSupabaseStatusBadge();
+
+  // Destaque visual no Card de Preset ativo
+  document.querySelectorAll('.preset-card').forEach(el => {
+    el.classList.remove('border-[#D4888C]', 'bg-[#F9F7F2]');
+    el.classList.add('border-transparent');
+  });
+  const activePresetCard = document.getElementById(`card-preset-${cfg.id}`);
+  if (activePresetCard) {
+    activePresetCard.classList.remove('border-transparent');
+    activePresetCard.classList.add('border-[#D4888C]', 'bg-[#F9F7F2]');
+  }
+
+  // Se a seção de operações estiver desligada, oculta o gerenciador de catálogo
+  const secaoCatalogo = document.getElementById('secao-catalogo-gerenciador');
+  if (secaoCatalogo) {
+    secaoCatalogo.style.display = cfg.modules?.operacoes ? '' : 'none';
+  }
+
+  // Rodapé
+  setText('footer-branding-text', `© 2026 ${cfg.appName || 'Finanças'} — Gestão Financeira Exclusiva`);
+
+  renderCatalogoTable();
+  populateProcedimentosSelect();
+}
+
+function setTabVisibility(elementId, isVisible) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.style.display = isVisible ? '' : 'none';
+  }
+}
+
+function setChecked(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.checked = Boolean(val);
+}
+
+function setInputValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+// Troca rápida de Preset
+function selectProfilePreset(presetId) {
+  const preset = PERFIS_PRESETS[presetId];
+  if (!preset) return;
+
+  state.config = JSON.parse(JSON.stringify(preset));
+  localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+  
+  applyModularUI();
+  renderAll();
+  showToast(`Perfil "${preset.nomePerfil}" aplicado com sucesso!`);
+}
+
+// Quando o usuário mexe em algum toggle na tela
+function handleModuleToggleChange() {
+  saveModularConfig(false);
+}
+
+// Salva as configurações customizadas pelo usuário
+function saveModularConfig(showToastMsg = true) {
+  if (!state.config) state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
+
+  state.config.id = 'personalizado';
+  state.config.nomePerfil = 'Personalizado';
+
+  state.config.modules = {
+    operacoes: document.getElementById('mod-toggle-operacoes')?.checked ?? true,
+    empresa: document.getElementById('mod-toggle-empresa')?.checked ?? true,
+    pessoal: document.getElementById('mod-toggle-pessoal')?.checked ?? true,
+    outros: document.getElementById('mod-toggle-outros')?.checked ?? true,
+    metas: document.getElementById('mod-toggle-metas')?.checked ?? true
+  };
+
+  const appName = document.getElementById('mod-input-app-name')?.value.trim();
+  const appSubtitle = document.getElementById('mod-input-app-subtitle')?.value.trim();
+  const termoCliente = document.getElementById('mod-input-termo-cliente')?.value.trim() || 'Cliente';
+  const termoServico = document.getElementById('mod-input-termo-servico')?.value.trim() || 'Serviço';
+  const termoPlural = document.getElementById('mod-input-termo-plural')?.value.trim() || 'Atendimentos';
+
+  if (appName) state.config.appName = appName;
+  if (appSubtitle) state.config.appSubtitle = appSubtitle;
+
+  state.config.terms = {
+    operacaoSingular: termoServico,
+    operacaoPlural: termoPlural,
+    clienteSingular: termoCliente,
+    clientePlural: `${termoCliente}s`,
+    servicoSingular: termoServico,
+    custoNegocio: state.config.modules.empresa ? 'Despesas Empresa' : 'Custos Negócio'
+  };
+
+  localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+  applyModularUI();
+  renderAll();
+
+  if (showToastMsg) {
+    showToast('Preferências e módulos salvos!');
+  }
+}
+
+// Clique no botão de Ação Rápida do Cabeçalho
+function handleHeaderQuickAction() {
+  if (state.config?.modules?.operacoes) {
+    openNewAtendimento();
+  } else if (state.config?.modules?.pessoal) {
+    openNewPessoal();
+  } else if (state.config?.modules?.empresa) {
+    openNewDespesa();
+  } else {
+    openNewReceitaExtra();
+  }
+}
+
+// Gerenciamento de Catálogo de Serviços
+function renderCatalogoTable() {
+  const tbody = document.getElementById('tbody-catalogo-servicos');
+  if (!tbody) return;
+
+  const catalog = state.config?.catalogo || [];
+  if (catalog.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="py-4 text-center text-gray-400 text-xs italic">
+          Nenhum serviço cadastrado no seu catálogo ainda. Clique em "+ Adicionar Serviço" acima.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = catalog.map((item, idx) => `
+    <tr class="hover:bg-stone-50 transition">
+      <td class="py-2.5 px-3 font-semibold text-gray-800">${item.nome}</td>
+      <td class="py-2.5 px-3 font-bold text-gray-900">${formatBRL(item.valor)}</td>
+      <td class="py-2.5 px-3 text-stone-600">${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}</td>
+      <td class="py-2.5 px-3 text-right">
+        <button onclick="removeCatalogoItem(${idx})" class="text-rose-500 hover:text-rose-700 p-1" title="Remover Serviço">
+          <i class="fa-solid fa-trash text-xs"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModalAddCatalogoItem() {
+  document.getElementById('modal-cat-nome').value = '';
+  document.getElementById('modal-cat-valor').value = '';
+  document.getElementById('modal-cat-sinal').value = '0.00';
+  openModal('modal-add-catalogo');
+}
+
+function submitAddCatalogoItem(e) {
+  e.preventDefault();
+  const nome = document.getElementById('modal-cat-nome').value.trim();
+  const valor = parseFloat(document.getElementById('modal-cat-valor').value) || 0;
+  const sinal = parseFloat(document.getElementById('modal-cat-sinal').value) || 0;
+
+  if (!nome) return;
+
+  if (!state.config.catalogo) state.config.catalogo = [];
+  state.config.catalogo.push({ nome, valor, sinal });
+
+  localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+  closeModal('modal-add-catalogo');
+  renderCatalogoTable();
+  populateProcedimentosSelect();
+  showToast(`Serviço "${nome}" adicionado com sucesso!`);
+}
+
+function removeCatalogoItem(idx) {
+  if (!state.config?.catalogo) return;
+  const removed = state.config.catalogo.splice(idx, 1);
+  localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+  renderCatalogoTable();
+  populateProcedimentosSelect();
+  if (removed.length > 0) {
+    showToast(`"${removed[0].nome}" removido do catálogo.`);
+  }
+}
+
+// Conexão Supabase
+function saveSupabaseConfig() {
+  const url = document.getElementById('supabase-config-url')?.value.trim();
+  const key = document.getElementById('supabase-config-key')?.value.trim();
+
+  state.supabaseUrl = url;
+  state.supabaseKey = key;
+  localStorage.setItem('saas_supabase_url', url);
+  localStorage.setItem('saas_supabase_key', key);
+
+  if (url && key && window.supabase) {
+    try {
+      state.supabaseClient = window.supabase.createClient(url, key);
+      showToast('Credenciais do Supabase salvas!');
+    } catch (e) {
+      showToast('Erro ao inicializar cliente Supabase.');
+    }
+  } else {
+    state.supabaseClient = null;
+    showToast('Configuração salva em modo local.');
+  }
+
+  updateSupabaseStatusBadge();
+}
+
+async function testSupabaseConnection() {
+  if (!state.supabaseUrl || !state.supabaseKey) {
+    showToast('Preencha a URL e a Anon Key do Supabase primeiro.');
+    return;
+  }
+
+  if (!window.supabase) {
+    showToast('Biblioteca do Supabase ainda carregando, tente novamente em instantes.');
+    return;
+  }
+
+  try {
+    const client = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
+    const { data, error } = await client.from('atendimentos').select('id').limit(1);
+
+    if (error && error.code !== 'PGRST116') {
+      showToast(`Conectou ao Supabase! (Aviso: execute supabase_schema.sql se necessário)`);
+    } else {
+      showToast('Conexão com o Supabase bem-sucedida!');
+    }
+    updateSupabaseStatusBadge(true);
+  } catch (err) {
+    showToast(`Erro na conexão: ${err.message || 'Verifique as chaves'}`);
+    updateSupabaseStatusBadge(false);
+  }
+}
+
+function updateSupabaseStatusBadge(isConnected = null) {
+  const badge = document.getElementById('badge-supabase-status');
+  if (!badge) return;
+
+  if (isConnected === true) {
+    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> Supabase Conectado';
+  } else if (state.supabaseUrl && state.supabaseKey) {
+    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Supabase Configurado';
+  } else {
+    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local / Planilha';
+  }
+}
+
+function downloadSupabaseSQL() {
+  window.open('./supabase_schema.sql', '_blank');
+}
+
+// Obtém catálogo dinâmico de procedimentos: mescla a lista do perfil com qualquer procedimento já existente na planilha
 function getDynamicProcedimentos() {
   const map = new Map();
 
-  // 1. Procedimentos base cadastrados no código
-  PROCEDIMENTOS_CATALOGO.forEach(p => {
-    const key = p.nome.trim().toLowerCase();
+  // 1. Procedimentos cadastrados no perfil / catálogo ativo
+  const catalogoBase = (state.config && Array.isArray(state.config.catalogo)) 
+    ? state.config.catalogo 
+    : PROCEDIMENTOS_CATALOGO;
+
+  catalogoBase.forEach(p => {
+    const key = (p.nome || '').trim().toLowerCase();
+    if (!key) return;
     map.set(key, {
       nome: p.nome.trim(),
-      valor: p.valor,
-      sinal: p.sinal,
+      valor: parseFloat(p.valor) || 0,
+      sinal: parseFloat(p.sinal) || 0,
       isCustom: false
     });
   });
@@ -65,7 +550,7 @@ function getDynamicProcedimentos() {
     const key = servico.toLowerCase();
 
     const val = parseFloat(a.valorTotal) || 0;
-    const sin = parseFloat(a.sinal) || 30;
+    const sin = parseFloat(a.sinal) || 0;
 
     if (!map.has(key)) {
       map.set(key, {
@@ -96,7 +581,7 @@ function populateProcedimentosSelect() {
 
   const defaultOption = document.createElement('option');
   defaultOption.value = '';
-  defaultOption.textContent = 'Selecione um procedimento cadastrado...';
+  defaultOption.textContent = 'Selecione um item cadastrado...';
   select.appendChild(defaultOption);
 
   const catalog = getDynamicProcedimentos();
@@ -105,7 +590,7 @@ function populateProcedimentosSelect() {
 
   if (personalizados.length > 0) {
     const groupPlanilha = document.createElement('optgroup');
-    groupPlanilha.label = '✨ Adicionados da Planilha';
+    groupPlanilha.label = '✨ Adicionados na Planilha';
     personalizados.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p.nome;
@@ -116,7 +601,7 @@ function populateProcedimentosSelect() {
     select.appendChild(groupPlanilha);
 
     const groupPadrao = document.createElement('optgroup');
-    groupPadrao.label = 'Procedimentos do Catálogo';
+    groupPadrao.label = 'Catálogo Ativo';
     padroes.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p.nome;
@@ -315,10 +800,12 @@ function forceAppRefresh() {
 // Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', async () => {
   checkAppVersion();
+  initModularSystem();
   await loadInitialData();
   initUI();
   setupEventListeners();
   renderAll();
+  applyModularUI();
 
   // Sincroniza em segundo plano com o Google Sheets
   if (state.apiUrl) {
@@ -589,14 +1076,76 @@ function renderKPIs() {
 
   const saldoPessoal = receitasPessoais - despesasPessoais;
 
-  // Atualizar elementos no DOM
-  setText('kpi-faturamento', formatBRL(faturamentoGeral));
-  setText('kpi-atendimentos-qtd', `${atendimentos.length} atendimentos`);
-  setText('kpi-recebido-caixa', formatBRL(recebidoEfetivo + totalOutros));
-  setText('kpi-a-receber', formatBRL(totalAReceber));
-  setText('kpi-despesas-empresa', formatBRL(totalDespesas));
-  setText('kpi-lucro-empresa', formatBRL(lucroOperacional));
-  setText('kpi-margem-lucro', `${margemLucro.toFixed(1)}% margem`);
+  // Atualizar elementos no DOM conforme Módulos Ativos (SaaS)
+  const cfg = state.config || {};
+  const isOperacoesActive = cfg.modules?.operacoes !== false;
+  const isEmpresaActive = cfg.modules?.empresa !== false;
+  const termoPlural = cfg.terms?.operacaoPlural || 'Atendimentos';
+
+  if (!isOperacoesActive && !isEmpresaActive) {
+    // Modo 100% Pessoal (Você / Sem clientes)
+    setText('kpi-card1-title', 'Receitas Pessoais');
+    setText('kpi-faturamento', formatBRL(receitasPessoais));
+    setText('kpi-atendimentos-qtd', `${pessoal.filter(p => (p.tipo||'').toLowerCase() === 'receita').length} entradas`);
+    setText('kpi-card1-tag', 'Total Pessoal');
+
+    setText('kpi-card2-title', 'Saldo do Mês');
+    setText('kpi-recebido-caixa', formatBRL(saldoPessoal));
+    setText('kpi-card2-sub-label', 'Despesas:');
+    setText('kpi-a-receber', formatBRL(despesasPessoais));
+
+    setText('kpi-card3-title', 'Despesas da Casa');
+    setText('kpi-despesas-empresa', formatBRL(despesasPessoais));
+    setText('kpi-card3-sub-label', 'Gastos do Mês');
+    setText('kpi-card3-sub-detail', 'Contas & Cotidiano');
+
+    setText('kpi-card4-title', 'Reserva Financeira');
+    setText('kpi-lucro-empresa', formatBRL(metas.reserva || 10000));
+    setText('kpi-margem-lucro', 'Meta Reserva');
+    setText('kpi-card4-sub-detail', 'Cofrinho Pessoal');
+  } else if (isOperacoesActive && !isEmpresaActive) {
+    // Modo Prestador de Serviço Simplificado (ex: Barbearia, Manicure sem PJ)
+    setText('kpi-card1-title', `Total em ${termoPlural}`);
+    setText('kpi-faturamento', formatBRL(faturamentoGeral));
+    setText('kpi-atendimentos-qtd', `${atendimentos.length} ${termoPlural.toLowerCase()}`);
+    setText('kpi-card1-tag', `Total ${termoPlural}`);
+
+    setText('kpi-card2-title', 'Recebido no Caixa');
+    setText('kpi-recebido-caixa', formatBRL(recebidoEfetivo + totalOutros));
+    setText('kpi-card2-sub-label', 'A Receber:');
+    setText('kpi-a-receber', formatBRL(totalAReceber));
+
+    setText('kpi-card3-title', 'Gastos Pessoais');
+    setText('kpi-despesas-empresa', formatBRL(despesasPessoais));
+    setText('kpi-card3-sub-label', 'Despesas Pessoais');
+    setText('kpi-card3-sub-detail', 'Cotidiano');
+
+    setText('kpi-card4-title', 'Saldo Livre Final');
+    setText('kpi-lucro-empresa', formatBRL(recebidoEfetivo + totalOutros - despesasPessoais));
+    setText('kpi-margem-lucro', 'Disponível');
+    setText('kpi-card4-sub-detail', 'Após contas');
+  } else {
+    // Modo Completo (PJ + PF - Estética / Empresa)
+    setText('kpi-card1-title', 'Faturamento Bruto');
+    setText('kpi-faturamento', formatBRL(faturamentoGeral));
+    setText('kpi-atendimentos-qtd', `${atendimentos.length} ${termoPlural.toLowerCase()}`);
+    setText('kpi-card1-tag', `Total ${termoPlural}`);
+
+    setText('kpi-card2-title', 'Recebido no Caixa');
+    setText('kpi-recebido-caixa', formatBRL(recebidoEfetivo + totalOutros));
+    setText('kpi-card2-sub-label', 'A Receber:');
+    setText('kpi-a-receber', formatBRL(totalAReceber));
+
+    setText('kpi-card3-title', cfg.terms?.custoNegocio || 'Despesas Empresa');
+    setText('kpi-despesas-empresa', formatBRL(totalDespesas));
+    setText('kpi-card3-sub-label', 'Custos operacionais');
+    setText('kpi-card3-sub-detail', 'Insumos & Aluguel');
+
+    setText('kpi-card4-title', 'Lucro Líquido PJ');
+    setText('kpi-lucro-empresa', formatBRL(lucroOperacional));
+    setText('kpi-margem-lucro', `${margemLucro.toFixed(1)}% margem`);
+    setText('kpi-card4-sub-detail', 'Antes do Pró-labore');
+  }
   
   setText('kpi-retirada-empresa', formatBRL(retiradasEmpresa));
   setText('kpi-gastos-pessoais', formatBRL(despesasPessoais));
