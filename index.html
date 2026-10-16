@@ -1020,8 +1020,8 @@
             </p>
             
             <div class="pt-2 border-t border-white/5 flex items-center justify-between">
-              <button onclick="switchTab('modulos')" class="text-xs text-[#D4888C] hover:text-rose-300 font-semibold flex items-center gap-1.5 transition" title="Configurações de Nuvem e Módulos">
-                <i class="fa-solid fa-sliders text-[11px]"></i> Ajustes de Nuvem
+              <button onclick="openAuthModal()" class="text-xs text-[#D4888C] hover:text-rose-300 font-semibold flex items-center gap-1.5 transition" title="Gerenciar Conta e Acesso">
+                <i class="fa-solid fa-user-lock text-[11px]"></i> Minha Conta
               </button>
               <button onclick="forceAppRefresh()" class="text-xs text-stone-400 hover:text-white transition flex items-center gap-1.5" title="Atualizar dados">
                 <i class="fa-solid fa-arrows-rotate text-[11px] text-[#C5A059]"></i> Sincronizar
@@ -1501,7 +1501,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.3.1"></script>
+  <script src="./app.js?v=1.3.2"></script>
 </body>
 
 </html>
