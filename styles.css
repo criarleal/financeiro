@@ -210,21 +210,30 @@ h1, h2, h3, h4, .serif {
 }
 
 /* Tabela Personalizada */
+.lux-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
 .lux-table th {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: #8C8681;
   font-weight: 600;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .lux-table td {
-  padding: 1rem 1.25rem;
-  font-size: 0.875rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  vertical-align: middle;
 }
 
 .lux-table tr:hover td {

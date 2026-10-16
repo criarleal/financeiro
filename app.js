@@ -6,7 +6,7 @@
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.3.1';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -129,10 +129,10 @@ const PERFIS_PRESETS = {
   },
   personalizado: {
     id: 'personalizado',
-    nomePerfil: 'Personalizado',
-    appName: 'Meu Painel Financeiro',
-    appSubtitle: 'Gestão Financeira Sob Medida',
-    logoIcon: 'fa-cubes',
+    nomePerfil: 'Sob Medida',
+    appName: 'Painel Financeiro Sob Medida',
+    appSubtitle: 'Gestão Financeira & Caixa Personalizável',
+    logoIcon: 'fa-sliders',
     modules: {
       operacoes: true,
       empresa: true,
@@ -141,19 +141,24 @@ const PERFIS_PRESETS = {
       metas: true
     },
     terms: {
-      operacaoSingular: 'Operação',
-      operacaoPlural: 'Operações',
+      operacaoSingular: 'Atendimento',
+      operacaoPlural: 'Atendimentos',
       clienteSingular: 'Cliente',
       clientePlural: 'Clientes',
       servicoSingular: 'Serviço',
-      custoNegocio: 'Custos da Atividade'
+      custoNegocio: 'Despesas Empresa'
     },
-    catalogo: []
+    catalogo: [
+      { nome: 'Atendimento / Consulta Geral', valor: 150, sinal: 50 },
+      { nome: 'Serviço Especializado', valor: 220, sinal: 50 },
+      { nome: 'Pacote Mensal', valor: 450, sinal: 100 },
+      { nome: 'Assessoria / Projeto', valor: 800, sinal: 200 }
+    ]
   }
 };
 
 // Procedimentos padrão originais (fallback)
-const PROCEDIMENTOS_CATALOGO = PERFIS_PRESETS.estetica.catalogo;
+const PROCEDIMENTOS_CATALOGO = PERFIS_PRESETS.personalizado.catalogo;
 
 // Estado da Aplicação
 const state = {
@@ -189,17 +194,22 @@ function initModularSystem() {
   if (saved) {
     try {
       state.config = JSON.parse(saved);
+      // Migração automática se estiver com o nome padrão antigo ou legado (e não tiver sido escolhido explicitamente pelo usuário)
+      if (!state.config.isUserSelected && (state.config.appName === 'Beatriz Leal Beauty' || state.config.appName === 'Studio de Estética & Beleza')) {
+        state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
+        localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+      }
     } catch (e) {
       console.warn('Erro ao carregar config modular:', e);
-      state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.estetica));
+      state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
     }
   } else {
-    state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.estetica));
+    state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
   }
 
   // Sanitização automática: remove nome legado se estiver em cache local
-  if (state.config && state.config.appName === 'Beatriz Leal Beauty') {
-    state.config.appName = 'Studio de Estética & Beleza';
+  if (state.config && (state.config.appName === 'Beatriz Leal Beauty' || (!state.config.isUserSelected && state.config.appName === 'Studio de Estética & Beleza'))) {
+    state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
     localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
   }
 
@@ -231,17 +241,22 @@ function applyModularUI() {
   const cfg = state.config;
 
   // 1. Branding do Top Header
-  setText('header-app-title', cfg.appName || 'Meu Painel Financeiro');
-  setText('header-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa');
+  setText('header-app-title', cfg.appName || 'Painel Financeiro Sob Medida');
+  setText('header-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa Personalizável');
   
   const logoIcon = document.getElementById('header-logo-icon');
   if (logoIcon) {
-    logoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sparkles'} text-base`;
+    logoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sliders'} text-sm sm:text-base`;
   }
 
-  const perfilTag = document.getElementById('header-perfil-tag');
-  if (perfilTag) {
-    perfilTag.innerText = cfg.nomePerfil || 'Personalizar';
+  const perfilTagText = document.getElementById('header-perfil-tag-text');
+  if (perfilTagText) {
+    perfilTagText.innerText = cfg.nomePerfil || 'Sob Medida';
+  } else {
+    const perfilTag = document.getElementById('header-perfil-tag');
+    if (perfilTag) {
+      perfilTag.innerText = cfg.nomePerfil || 'Sob Medida';
+    }
   }
 
   // 2. Botão de Ação Rápida (Dashboard / Novo Atendimento)
@@ -263,6 +278,11 @@ function applyModularUI() {
   setText('label-nav-atendimentos', cfg.terms?.operacaoPlural || 'Atendimentos');
   setText('label-nav-despesas', cfg.terms?.custoNegocio || 'Despesas Empresa');
 
+  // Rótulos de Seções e Tabelas Dinâmicos
+  setText('title-aba-atendimentos', `${cfg.terms?.operacaoPlural || 'Atendimentos'} Realizados`);
+  setText('th-servico-atendimentos', cfg.terms?.servicoSingular || 'Procedimento');
+  setText('label-chart-procedimentos', `${cfg.terms?.servicoSingular || 'Procedimento'}s Mais Lucrativos`);
+
   // Se o usuário estiver numa aba que foi desligada, redireciona para o dashboard
   if (state.currentTab === 'atendimentos' && !cfg.modules?.operacoes) switchTab('dashboard');
   if (state.currentTab === 'despesas' && !cfg.modules?.empresa) switchTab('dashboard');
@@ -280,13 +300,24 @@ function applyModularUI() {
   setInputValue('mod-input-app-name', cfg.appName || '');
   setInputValue('mod-input-app-subtitle', cfg.appSubtitle || '');
   setInputValue('mod-input-termo-cliente', cfg.terms?.clienteSingular || 'Cliente');
-  setInputValue('mod-input-termo-servico', cfg.terms?.servicoSingular || 'Procedimento');
+  setInputValue('mod-input-termo-servico', cfg.terms?.servicoSingular || 'Serviço');
   setInputValue('mod-input-termo-plural', cfg.terms?.operacaoPlural || 'Atendimentos');
 
   // Supabase inputs
   setInputValue('supabase-config-url', state.supabaseUrl || '');
   setInputValue('supabase-config-key', state.supabaseKey || '');
   updateSupabaseStatusBadge();
+
+  // Destaque visual na Barra Rápida de Nichos (Dashboard)
+  document.querySelectorAll('.quick-preset-btn').forEach(btn => {
+    btn.classList.remove('bg-gradient-to-r', 'from-[#D4888C]', 'to-[#C5A059]', 'text-white', 'border-transparent', 'font-bold', 'shadow-md');
+    btn.classList.add('bg-white/10', 'text-white', 'border-white/15');
+  });
+  const activeQuickBtn = document.getElementById(`btn-quick-preset-${cfg.id}`);
+  if (activeQuickBtn) {
+    activeQuickBtn.classList.remove('bg-white/10', 'border-white/15');
+    activeQuickBtn.classList.add('bg-gradient-to-r', 'from-[#D4888C]', 'to-[#C5A059]', 'text-white', 'border-transparent', 'font-bold', 'shadow-md');
+  }
 
   // Destaque visual no Card de Preset ativo
   document.querySelectorAll('.preset-card').forEach(el => {
@@ -307,11 +338,11 @@ function applyModularUI() {
 
   // Rodapé Dinâmico Executivo
   setText('footer-branding-text', `© 2026 ${cfg.appName || 'Finanças'} — Gestão Financeira Exclusiva`);
-  setText('footer-app-title', cfg.appName || 'Painel Financeiro');
-  setText('footer-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa');
+  setText('footer-app-title', cfg.appName || 'Painel Financeiro Sob Medida');
+  setText('footer-app-subtitle', cfg.appSubtitle || 'Gestão Financeira & Caixa Personalizável');
   const footerLogoIcon = document.getElementById('footer-logo-icon');
   if (footerLogoIcon) {
-    footerLogoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sparkles'} text-base`;
+    footerLogoIcon.className = `fa-solid ${cfg.logoIcon || 'fa-sliders'} text-base`;
   }
 
   renderCatalogoTable();
@@ -341,6 +372,7 @@ function selectProfilePreset(presetId) {
   if (!preset) return;
 
   state.config = JSON.parse(JSON.stringify(preset));
+  state.config.isUserSelected = true;
   localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
   
   applyModularUI();
@@ -372,7 +404,8 @@ function saveModularConfig(showToastMsg = true) {
   if (!state.config) state.config = JSON.parse(JSON.stringify(PERFIS_PRESETS.personalizado));
 
   state.config.id = 'personalizado';
-  state.config.nomePerfil = 'Personalizado';
+  state.config.nomePerfil = 'Sob Medida';
+  state.config.isUserSelected = true;
 
   state.config.modules = {
     operacoes: document.getElementById('mod-toggle-operacoes')?.checked ?? true,
@@ -786,8 +819,8 @@ async function handleAuthSubmit(event) {
   try {
     if (state.authMode === 'signup') {
       const nome = document.getElementById('auth-input-name').value.trim() || 'Meu Espaço';
-      const presetId = document.getElementById('auth-input-preset').value || 'estetica';
-      const preset = PERFIS_PRESETS[presetId] || PERFIS_PRESETS.estetica;
+      const presetId = document.getElementById('auth-input-preset').value || 'personalizado';
+      const preset = PERFIS_PRESETS[presetId] || PERFIS_PRESETS.personalizado;
 
       showAuthFeedback('Criando sua conta exclusiva...', 'info');
 
@@ -919,28 +952,29 @@ async function loadUserDataFromSupabase(user) {
       .maybeSingle();
 
     if (perfil) {
-      let appName = perfil.app_name || 'Meu Painel Financeiro';
-      if (appName === 'Beatriz Leal Beauty') {
-        appName = 'Studio de Estética & Beleza';
+      let appName = perfil.app_name || 'Painel Financeiro Sob Medida';
+      if (appName === 'Beatriz Leal Beauty' || appName === 'Studio de Estética & Beleza') {
+        appName = 'Painel Financeiro Sob Medida';
         // Atualiza no banco silenciosamente para limpar o registro legado do usuário
         state.supabaseClient.from('perfis').update({ app_name: appName }).eq('id', user.id).then();
       }
 
       state.config = {
         id: perfil.tipo_perfil || 'personalizado',
-        nomePerfil: perfil.nome || user.user_metadata?.nome || 'Meu Espaço',
+        nomePerfil: perfil.nome || user.user_metadata?.nome || 'Sob Medida',
         appName: appName,
-        appSubtitle: perfil.app_subtitle || 'Gestão Financeira & Caixa',
-        logoIcon: perfil.logo_icon || 'fa-sparkles',
+        appSubtitle: perfil.app_subtitle || 'Gestão Financeira & Caixa Personalizável',
+        logoIcon: perfil.logo_icon || 'fa-sliders',
         preset: perfil.tipo_perfil || 'personalizado',
+        isUserSelected: true,
         modules: perfil.modulos || { operacoes: true, empresa: true, pessoal: true, outros: true, metas: true },
         terms: perfil.termos || {
           operacaoSingular: 'Atendimento',
           operacaoPlural: 'Atendimentos',
           clienteSingular: 'Cliente',
           clientePlural: 'Clientes',
-          servicoSingular: 'Procedimento',
-          custoNegocio: 'Despesas da Empresa'
+          servicoSingular: 'Serviço',
+          custoNegocio: 'Despesas Empresa'
         },
         catalogo: []
       };
@@ -1331,7 +1365,7 @@ function checkAppVersion() {
     localStorage.setItem('bia_app_version', APP_VERSION);
     localStorage.removeItem('bia_fin_data');
     const savedCfg = localStorage.getItem('saas_fin_config');
-    if (savedCfg && savedCfg.includes('Beatriz Leal Beauty')) {
+    if (savedCfg && (savedCfg.includes('Beatriz Leal Beauty') || (!savedCfg.includes('"isUserSelected":true') && savedCfg.includes('Studio de Estética & Beleza')))) {
       localStorage.removeItem('saas_fin_config');
     }
   }
@@ -1341,7 +1375,7 @@ function checkAppVersion() {
 function forceAppRefresh() {
   localStorage.removeItem('bia_fin_data');
   const savedCfg = localStorage.getItem('saas_fin_config');
-  if (savedCfg && savedCfg.includes('Beatriz Leal Beauty')) {
+  if (savedCfg && (savedCfg.includes('Beatriz Leal Beauty') || (!savedCfg.includes('"isUserSelected":true') && savedCfg.includes('Studio de Estética & Beleza')))) {
     localStorage.removeItem('saas_fin_config');
   }
   showToast('Cache limpo! Recarregando dados frescos...');
@@ -1723,7 +1757,7 @@ function renderKPIs() {
     setText('kpi-card3-title', cfg.terms?.custoNegocio || 'Despesas Empresa');
     setText('kpi-despesas-empresa', formatBRL(totalDespesas));
     setText('kpi-card3-sub-label', 'Custos operacionais');
-    setText('kpi-card3-sub-detail', 'Insumos & Aluguel');
+    setText('kpi-card3-sub-detail', cfg.id === 'estetica' ? 'Insumos & Aluguel' : 'Custos & Fornecedores');
 
     setText('kpi-card4-title', 'Lucro Líquido PJ');
     setText('kpi-lucro-empresa', formatBRL(lucroOperacional));
@@ -1802,17 +1836,17 @@ function renderAtendimentosTable() {
           <td class="font-medium text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
           <td class="font-semibold text-gray-800">${a.cliente}</td>
           <td class="text-gray-700 font-medium">${a.servico}</td>
-          <td class="font-bold text-gray-900">${formatBRL(a.valorTotal)}</td>
-          <td class="text-xs text-gray-600">
+          <td class="font-bold text-gray-900 whitespace-nowrap">${formatBRL(a.valorTotal)}</td>
+          <td class="text-xs text-gray-600 whitespace-nowrap">
             ${a.sinal > 0 ? `<span class="badge-gold px-2 py-0.5 rounded font-medium text-[11px] block w-fit mb-0.5">Sinal: ${formatBRL(a.sinal)}</span>` : ''}
             <span>Restante: ${formatBRL(a.restante)}</span>
           </td>
-          <td class="font-medium ${a.aReceber > 0 ? 'text-amber-600 font-bold' : 'text-gray-400'}">${formatBRL(a.aReceber)}</td>
-          <td class="text-xs text-gray-600">
+          <td class="font-medium whitespace-nowrap ${a.aReceber > 0 ? 'text-amber-600 font-bold' : 'text-gray-400'}">${formatBRL(a.aReceber)}</td>
+          <td class="text-xs text-gray-600 whitespace-nowrap">
             <span class="inline-block px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">${a.formaPagamento}</span>
             ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-[10px] text-gray-400 block mt-0.5">${a.parcelas}</span>` : ''}
           </td>
-          <td>${badgeStatus}</td>
+          <td class="whitespace-nowrap">${badgeStatus}</td>
           <td class="text-right whitespace-nowrap">
             <button onclick="openEditAtendimento(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
               <i class="fa-regular fa-pen-to-square"></i>

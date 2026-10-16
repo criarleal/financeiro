@@ -46,7 +46,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Custom Styles com versão -->
-  <link rel="stylesheet" href="./styles.css?v=1.2.4">
+  <link rel="stylesheet" href="./styles.css?v=1.3.1">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -60,12 +60,17 @@
         
         <!-- Logo e Título com Suporte Modular -->
         <div class="flex items-center gap-3">
-          <div id="header-logo-container" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md cursor-pointer transition hover:scale-105 shrink-0" onclick="switchTab('modulos')" title="Personalizar Módulos do Sistema">
-            <i id="header-logo-icon" class="fa-solid fa-sparkles text-sm sm:text-base"></i>
+          <div id="header-logo-container" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md cursor-pointer transition hover:scale-105 shrink-0" onclick="switchTab('modulos')" title="Personalizar Nicho & Módulos do Sistema">
+            <i id="header-logo-icon" class="fa-solid fa-sliders text-sm sm:text-base"></i>
           </div>
           <div class="border-l border-white/20 pl-3">
-            <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[170px] sm:max-w-none">Painel Financeiro</span>
-            <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[170px] sm:max-w-none">Gestão Financeira & Caixa</span>
+            <div class="flex items-center gap-2">
+              <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[180px] sm:max-w-none">Painel Financeiro Sob Medida</span>
+              <button id="header-perfil-tag" onclick="switchTab('modulos')" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#D4888C]/20 hover:bg-[#D4888C]/30 text-[#E8A5A8] border border-[#D4888C]/30 transition cursor-pointer shrink-0" title="Clique para personalizar seu nicho e módulos">
+                <i class="fa-solid fa-sliders text-[8px]"></i> <span id="header-perfil-tag-text">Sob Medida</span>
+              </button>
+            </div>
+            <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[180px] sm:max-w-none">Gestão Financeira & Caixa Personalizável</span>
           </div>
         </div>
 
@@ -140,7 +145,7 @@
           <i class="fa-solid fa-bullseye mr-1.5 text-sm"></i> Metas
         </button>
         <button class="tab-btn py-4 text-[#D4888C]" data-tab="modulos" id="tab-nav-modulos">
-          <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-sm"></i> Personalizar (SaaS)
+          <i class="fa-solid fa-sliders mr-1.5 text-sm"></i> Personalizar (Sob Medida)
         </button>
       </div>
     </nav>
@@ -180,6 +185,43 @@
           </button>
           <button onclick="exportDataCSV()" class="px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:border-black transition flex items-center gap-2 shadow-sm" title="Exportar dados para Excel/CSV">
             <i class="fa-solid fa-download"></i> Exportar
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra Rápida de Nichos & Personalização (SaaS Modular) -->
+      <div class="card-lux p-3.5 sm:p-4 bg-gradient-to-r from-[#1E1E1E] via-[#2A2424] to-[#1E1E1E] text-white flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md border border-[#D4888C]/25 rounded-2xl">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white tracking-wide">Estrutura 100% Adaptável ao Seu Negócio</span>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#D4888C]/20 text-[#E8A5A8] border border-[#D4888C]/30 font-semibold uppercase">Modos Rápidos</span>
+            </div>
+            <p class="text-[11px] text-white/70">Alterne entre modelos prontos ou personalize o nome, termos e módulos:</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5 shrink-0" id="quick-preset-bar">
+          <button onclick="selectProfilePreset('personalizado')" id="btn-quick-preset-personalizado" class="quick-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15" title="Painel Sob Medida (Personalizado)">
+            <i class="fa-solid fa-sliders text-[#D4888C]"></i> Sob Medida
+          </button>
+          <button onclick="selectProfilePreset('estetica')" id="btn-quick-preset-estetica" class="quick-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15" title="Preset Estética & Procedimentos">
+            <i class="fa-solid fa-sparkles text-rose-300"></i> Estética
+          </button>
+          <button onclick="selectProfilePreset('barbearia')" id="btn-quick-preset-barbearia" class="quick-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15" title="Preset Barbearia & Cortes">
+            <i class="fa-solid fa-scissors text-amber-300"></i> Barbearia
+          </button>
+          <button onclick="selectProfilePreset('manicure')" id="btn-quick-preset-manicure" class="quick-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15" title="Preset Studio de Unhas & Nail Design">
+            <i class="fa-solid fa-hand-dots text-purple-300"></i> Unhas
+          </button>
+          <button onclick="selectProfilePreset('pessoal')" id="btn-quick-preset-pessoal" class="quick-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/15" title="Preset 100% Finanças Pessoais">
+            <i class="fa-solid fa-wallet text-emerald-300"></i> Pessoal PF
+          </button>
+          <button onclick="switchTab('modulos')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-[#D4888C] hover:bg-[#c4777b] text-white shadow-sm" title="Abrir configurações avançadas de personalização">
+            <i class="fa-solid fa-sliders text-[11px]"></i> Personalizar Módulos →
           </button>
         </div>
       </div>
@@ -232,7 +274,7 @@
           <div class="serif text-2xl md:text-3xl font-bold text-rose-600 mb-1" id="kpi-despesas-empresa">R$ 0,00</div>
           <div class="flex items-center justify-between text-xs text-gray-500">
             <span id="kpi-card3-sub-label">Custos operacionais</span>
-            <span class="text-stone-400" id="kpi-card3-sub-detail">Insumos & Aluguel</span>
+            <span class="text-stone-400" id="kpi-card3-sub-detail">Custos & Fornecedores</span>
           </div>
           <div class="absolute bottom-0 left-0 right-0 h-1 bg-rose-400"></div>
         </div>
@@ -343,7 +385,7 @@
         <div class="card-lux p-6">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h3 class="serif text-lg font-bold text-gray-900">Procedimentos</h3>
+              <h3 class="serif text-lg font-bold text-gray-900" id="label-chart-procedimentos">Serviços Mais Lucrativos</h3>
               <p class="text-xs text-gray-400">Distribuição da receita no período</p>
             </div>
           </div>
@@ -366,7 +408,7 @@
           <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
             Agenda & Caixa Diário
           </span>
-          <h2 class="text-2xl font-bold text-gray-900 serif">Atendimentos Realizados</h2>
+          <h2 class="text-2xl font-bold text-gray-900 serif" id="title-aba-atendimentos">Atendimentos Realizados</h2>
         </div>
 
         <button onclick="openNewAtendimento()" class="rose-button px-5 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2">
@@ -413,15 +455,15 @@
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
               <tr>
-                <th>Data</th>
-                <th>Cliente</th>
-                <th>Procedimento</th>
-                <th>Valor Total</th>
-                <th>Recebido (Sinal + Restante)</th>
-                <th>A Receber</th>
-                <th>Pagamento</th>
-                <th>Situação</th>
-                <th class="text-right">Ações</th>
+                <th class="whitespace-nowrap">Data</th>
+                <th class="whitespace-nowrap">Cliente</th>
+                <th class="whitespace-nowrap" id="th-servico-atendimentos">Serviço</th>
+                <th class="whitespace-nowrap" title="Valor Total do Procedimento">Total</th>
+                <th class="whitespace-nowrap" title="Sinal + Restante Recebidos">Recebido</th>
+                <th class="whitespace-nowrap" title="Saldo a Receber">A Receber</th>
+                <th class="whitespace-nowrap">Pagamento</th>
+                <th class="whitespace-nowrap">Situação</th>
+                <th class="text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody id="tbody-atendimentos" class="divide-y divide-black/5 font-montserrat">
@@ -666,8 +708,27 @@
           <span class="text-[11px] text-gray-400">Clique para aplicar a estrutura ideal</span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Preset 1: Estética & Beleza -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+          <!-- Preset 1: Sob Medida (Personalizado) -->
+          <div onclick="selectProfilePreset('personalizado')" id="card-preset-personalizado" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] text-white flex items-center justify-center font-bold shadow-sm">
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-gray-900">Sob Medida</h4>
+                <span class="text-[10px] text-gray-500">Qualquer Negócio ou Serviço</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed">Adapte o nome do seu espaço, defina termos próprios (clientes, alunos, etc.) e ative só o que precisa.</p>
+            <div class="mt-3 flex flex-wrap gap-1">
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-[#D4888C] font-semibold">100% Livre</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Seus Termos</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Modular</span>
+            </div>
+          </div>
+
+          <!-- Preset 2: Estética & Beleza -->
           <div onclick="selectProfilePreset('estetica')" id="card-preset-estetica" class="preset-card card-lux p-4 cursor-pointer hover:border-[#D4888C] transition border-2 border-transparent">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-9 h-9 rounded-xl bg-rose-50 text-[#D4888C] flex items-center justify-center font-bold">
@@ -867,43 +928,6 @@
         </div>
       </div>
 
-      <!-- SEÇÃO 4: CONTA E NUVEM (INTERFACE AMIGÁVEL & SEGURA) -->
-      <div class="card-lux p-6 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/5">
-          <div>
-            <span class="badge-rose px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
-              Segurança & Nuvem
-            </span>
-            <h3 class="serif text-lg font-bold text-gray-900">Sincronização em Nuvem</h3>
-            <p class="text-xs text-gray-500">Seus lançamentos, despesas e relatórios salvos com criptografia e isolamento individual.</p>
-          </div>
-
-          <div id="badge-supabase-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> Nuvem Conectada
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-stone-50 rounded-2xl border border-stone-200/80">
-          <div class="space-y-1 text-center sm:text-left">
-            <h4 class="font-bold text-sm text-gray-900 flex items-center justify-center sm:justify-start gap-2">
-              <i class="fa-solid fa-shield-halved text-[#D4888C]"></i> Proteção de Dados com Acesso Exclusivo
-            </h4>
-            <p class="text-xs text-gray-600">
-              Acesse sua conta para manter seus lançamentos sincronizados em qualquer dispositivo com privacidade total.
-            </p>
-          </div>
-          
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="openAuthModal()" class="px-5 py-2.5 rounded-xl bg-stone-900 text-white hover:bg-black font-bold text-xs flex items-center gap-2 transition shadow-sm">
-              <i class="fa-solid fa-user-lock text-[#D4888C]"></i> Acessar Minha Conta
-            </button>
-            <button onclick="forceAppRefresh()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition border border-stone-200" title="Atualizar dados e limpar cache">
-              <i class="fa-solid fa-arrows-rotate text-[#D4888C]"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
     </div>
 
   </main>
@@ -921,11 +945,11 @@
         <div class="md:col-span-5 space-y-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md shrink-0">
-              <i id="footer-logo-icon" class="fa-solid fa-sparkles text-base"></i>
+              <i id="footer-logo-icon" class="fa-solid fa-sliders text-base"></i>
             </div>
             <div class="border-l border-white/20 pl-3">
-              <span id="footer-app-title" class="text-sm font-bold tracking-wider text-white block uppercase font-montserrat">Painel Financeiro</span>
-              <span id="footer-app-subtitle" class="text-xs text-white/70 font-light block">Gestão Financeira & Caixa</span>
+              <span id="footer-app-title" class="text-sm font-bold tracking-wider text-white block uppercase font-montserrat">Painel Financeiro Sob Medida</span>
+              <span id="footer-app-subtitle" class="text-xs text-white/70 font-light block">Gestão Financeira & Caixa Personalizável</span>
             </div>
           </div>
           
@@ -1427,11 +1451,11 @@
         <div id="auth-field-preset" class="hidden space-y-1">
           <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Seu Nicho / Atividade</label>
           <select id="auth-input-preset" class="lux-input w-full text-xs">
+            <option value="personalizado" selected>⚡ Sob Medida (Personalizado / Qualquer Negócio)</option>
             <option value="estetica">🌸 Estética & Procedimentos de Beleza</option>
             <option value="barbearia">💈 Barbearia & Cortes Masculinos</option>
             <option value="manicure">💅 Studio de Unhas & Nail Design</option>
             <option value="pessoal">👤 100% Finanças Pessoais (Sem clientes / PF)</option>
-            <option value="personalizado">⚙️ Outro Negócio / Personalizado</option>
           </select>
           <p class="text-[10px] text-gray-400">Você poderá personalizar termos e serviços a qualquer momento.</p>
         </div>
@@ -1477,7 +1501,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.2.4"></script>
+  <script src="./app.js?v=1.3.1"></script>
 </body>
 
 </html>
