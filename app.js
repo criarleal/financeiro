@@ -669,7 +669,7 @@ function updateAuthNavbarUI(user) {
     updateSyncBadge('supabase');
   } else {
     pill.innerHTML = `
-      <button onclick="openAuthModal()" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/10 shadow-sm" title="Acessar com E-mail e Senha">
+      <button onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-2 transition border border-white/15 shadow-sm hover:border-[#D4888C]" title="Acessar ou Criar Conta">
         <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
         <span class="hidden sm:inline">Entrar / Cadastrar</span>
       </button>
