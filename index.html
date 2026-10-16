@@ -109,6 +109,14 @@
           <span id="header-perfil-tag" class="hidden sm:inline">Personalizar</span>
         </button>
 
+        <!-- Botão / Pill de Usuário Nuvem (Supabase Auth) -->
+        <div id="auth-user-pill">
+          <button onclick="openAuthModal()" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/10 shadow-sm" title="Acessar com E-mail e Senha">
+            <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
+            <span class="hidden sm:inline">Entrar / Cadastrar</span>
+          </button>
+        </div>
+
         <div id="sync-status-badge" onclick="switchTab('config')" class="cursor-pointer" title="Configurar Google Apps Script ou Supabase">
           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
             <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Carregando...
@@ -983,12 +991,12 @@
           <div class="space-y-3">
             <div>
               <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Project URL</label>
-              <input type="text" id="supabase-config-url" placeholder="https://seu-projeto.supabase.co" class="lux-input w-full text-xs font-mono">
+              <input type="text" id="supabase-config-url" value="https://vvpmwpgvdcdutzlofnwx.supabase.co" placeholder="https://vvpmwpgvdcdutzlofnwx.supabase.co" class="lux-input w-full text-xs font-mono">
             </div>
 
             <div>
               <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">Supabase Anon Public Key</label>
-              <input type="password" id="supabase-config-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="lux-input w-full text-xs font-mono">
+              <input type="password" id="supabase-config-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2cG13cGd2ZGNkdXR6bG9mbnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMTE2NTIsImV4cCI6MjEwNzY4NzY1Mn0.mjCEhG4Kxb1S58oLeTZa5ms8w7yBbbWSdvsBEP_ecM8" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="lux-input w-full text-xs font-mono">
             </div>
 
             <div class="flex gap-2 pt-1">
@@ -996,7 +1004,13 @@
                 Salvar Chaves
               </button>
               <button onclick="testSupabaseConnection()" class="gold-button flex-1 py-2 rounded-xl text-xs font-bold">
-                Testar Supabase
+                Testar Conexão
+              </button>
+            </div>
+
+            <div class="pt-1">
+              <button onclick="openAuthModal()" class="w-full py-2.5 rounded-xl bg-stone-900 text-white hover:bg-black font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-user-lock text-[#D4888C]"></i> Entrar ou Criar Conta Familiar
               </button>
             </div>
           </div>
@@ -1389,11 +1403,95 @@
     </div>
   </div>
 
+  <!-- ====================================================================
+       MODAL: AUTENTICAÇÃO / LOGIN / CADASTRO (SUPABASE)
+       ==================================================================== -->
+  <div id="modal-auth" class="modal-backdrop hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-[#D4888C]/20 animate-scale">
+      
+      <!-- Cabeçalho -->
+      <div class="flex items-start justify-between pb-3 border-b border-black/5">
+        <div>
+          <span class="badge-gold px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest inline-block mb-1">
+            Nuvem & Privacidade Total
+          </span>
+          <h3 id="auth-modal-title" class="serif text-xl font-bold text-gray-900">Acesso ao Painel</h3>
+          <p id="auth-modal-subtitle" class="text-xs text-gray-500 mt-0.5">Cada membro da família acessa seus dados de forma 100% individual.</p>
+        </div>
+        <button type="button" onclick="closeAuthModal()" class="w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Abas de Alternância: Entrar vs Criar Conta -->
+      <div class="flex p-1 bg-stone-100 rounded-xl">
+        <button id="auth-tab-login" type="button" onclick="switchAuthMode('login')" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-white text-gray-900 shadow-sm">
+          Já tenho conta (Entrar)
+        </button>
+        <button id="auth-tab-signup" type="button" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-gray-500 hover:text-gray-900">
+          Criar minha conta
+        </button>
+      </div>
+
+      <!-- Formulário de Autenticação -->
+      <form id="form-auth" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        
+        <!-- Campo: Nome / Espaço (apenas no Cadastro) -->
+        <div id="auth-field-name" class="hidden space-y-1">
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Seu Nome ou Nome do Espaço</label>
+          <input type="text" id="auth-input-name" placeholder="Ex: Beatriz Leal, Barbearia do Pai, Finanças do Gabriel" class="lux-input w-full text-xs">
+        </div>
+
+        <!-- Campo: Nicho / Preset (apenas no Cadastro) -->
+        <div id="auth-field-preset" class="hidden space-y-1">
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Seu Nicho / Atividade</label>
+          <select id="auth-input-preset" class="lux-input w-full text-xs">
+            <option value="estetica">🌸 Estética & Procedimentos (Bia Leal)</option>
+            <option value="barbearia">💈 Barbearia & Cortes Masculinos (Pai)</option>
+            <option value="manicure">💅 Studio de Unhas & Esmalteria (Mãe)</option>
+            <option value="pessoal">👤 100% Finanças Pessoais (Sem clientes / PF)</option>
+            <option value="personalizado">⚙️ Outro Negócio / Personalizado</option>
+          </select>
+          <p class="text-[10px] text-gray-400">Você poderá personalizar termos e serviços a qualquer momento.</p>
+        </div>
+
+        <!-- Campo: E-mail -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">E-mail</label>
+          <input type="email" id="auth-input-email" required placeholder="seuemail@exemplo.com" class="lux-input w-full text-xs">
+        </div>
+
+        <!-- Campo: Senha -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Senha</label>
+          <input type="password" id="auth-input-password" required minlength="6" placeholder="Mínimo de 6 caracteres" class="lux-input w-full text-xs">
+        </div>
+
+        <!-- Mensagem de Status/Erro -->
+        <div id="auth-feedback-msg" class="hidden p-3 rounded-xl text-xs"></div>
+
+        <!-- Botões -->
+        <div class="pt-2">
+          <button id="auth-submit-btn" type="submit" class="rose-button w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span id="auth-submit-btn-text">Entrar no meu Painel</span>
+          </button>
+        </div>
+
+        <!-- Fallback / Rodapé explicativo -->
+        <div class="pt-1 text-center text-[10px] text-gray-400">
+          <p><i class="fa-solid fa-shield-halved mr-1 text-[#D4888C]"></i> Isolamento automático Row Level Security (RLS) no Supabase.</p>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
   <!-- Rodapé Discreto com Versão da Aplicação -->
   <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-gray-400 border-t border-black/5 mt-12 flex flex-col sm:flex-row items-center justify-between gap-2">
     <span id="footer-branding-text">© 2026 Beatriz Leal Beauty — Gestão Financeira Exclusiva</span>
     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 font-mono text-[11px] border border-stone-200">
-      <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.2.0 (Modular SaaS)
+      <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C]"></span> v1.2.1 (Modular SaaS + Nuvem)
     </span>
   </footer>
 
@@ -1401,7 +1499,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.2.0"></script>
+  <script src="./app.js?v=1.2.1"></script>
 </body>
 
 </html>

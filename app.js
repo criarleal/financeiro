@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS)
-const APP_VERSION = '1.2.0';
+// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
+const APP_VERSION = '1.2.1';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -176,9 +176,11 @@ const state = {
     payment: 'all'
   },
   config: null,
-  supabaseUrl: localStorage.getItem('saas_supabase_url') || '',
-  supabaseKey: localStorage.getItem('saas_supabase_key') || '',
-  supabaseClient: null
+  supabaseUrl: localStorage.getItem('saas_supabase_url') || 'https://vvpmwpgvdcdutzlofnwx.supabase.co',
+  supabaseKey: localStorage.getItem('saas_supabase_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2cG13cGd2ZGNkdXR6bG9mbnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMTE2NTIsImV4cCI6MjEwNzY4NzY1Mn0.mjCEhG4Kxb1S58oLeTZa5ms8w7yBbbWSdvsBEP_ecM8',
+  supabaseClient: null,
+  currentUser: null,
+  authMode: 'login'
 };
 
 // Inicialização da Configuração Modular
@@ -199,6 +201,17 @@ function initModularSystem() {
   if (state.supabaseUrl && state.supabaseKey && window.supabase) {
     try {
       state.supabaseClient = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
+      
+      // Escutador global de mudanças de autenticação
+      state.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          state.currentUser = session.user;
+          updateAuthNavbarUI(session.user);
+        } else {
+          state.currentUser = null;
+          updateAuthNavbarUI(null);
+        }
+      });
     } catch (err) {
       console.warn('Erro ao inicializar Supabase:', err);
     }
@@ -321,6 +334,20 @@ function selectProfilePreset(presetId) {
   applyModularUI();
   renderAll();
   showToast(`Perfil "${preset.nomePerfil}" aplicado com sucesso!`);
+
+  // Se logado no Supabase, persiste a mudança no perfil da nuvem
+  if (state.currentUser && state.supabaseClient) {
+    state.supabaseClient.from('perfis').update({
+      tipo_perfil: presetId,
+      app_name: preset.appName,
+      app_subtitle: preset.appSubtitle,
+      modulos: preset.modules,
+      termos: preset.terms,
+      updated_at: new Date().toISOString()
+    }).eq('id', state.currentUser.id).then(({ error }) => {
+      if (error) console.error('Erro ao atualizar perfil no Supabase:', error);
+    });
+  }
 }
 
 // Quando o usuário mexe em algum toggle na tela
@@ -364,6 +391,19 @@ function saveModularConfig(showToastMsg = true) {
   localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
   applyModularUI();
   renderAll();
+
+  // Se logado no Supabase, sincroniza alterações de perfil na nuvem
+  if (state.currentUser && state.supabaseClient) {
+    state.supabaseClient.from('perfis').update({
+      app_name: state.config.appName,
+      app_subtitle: state.config.appSubtitle,
+      modulos: state.config.modules,
+      termos: state.config.terms,
+      updated_at: new Date().toISOString()
+    }).eq('id', state.currentUser.id).then(({ error }) => {
+      if (error) console.error('Erro ao salvar perfil no Supabase:', error);
+    });
+  }
 
   if (showToastMsg) {
     showToast('Preferências e módulos salvos!');
@@ -430,13 +470,28 @@ function submitAddCatalogoItem(e) {
   if (!nome) return;
 
   if (!state.config.catalogo) state.config.catalogo = [];
-  state.config.catalogo.push({ nome, valor, sinal });
+  const newItem = { nome, valor, sinal };
+  state.config.catalogo.push(newItem);
 
   localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
   closeModal('modal-add-catalogo');
   renderCatalogoTable();
   populateProcedimentosSelect();
   showToast(`Serviço "${nome}" adicionado com sucesso!`);
+
+  // Se logado no Supabase, adiciona no catálogo na nuvem
+  if (state.currentUser && state.supabaseClient) {
+    state.supabaseClient.from('catalogo_servicos').insert({
+      user_id: state.currentUser.id,
+      nome,
+      valor,
+      sinal,
+      ativo: true
+    }).select().single().then(({ data: ins, error }) => {
+      if (ins) newItem.id = ins.id;
+      if (error) console.error('Erro ao adicionar serviço no Supabase:', error);
+    });
+  }
 }
 
 function removeCatalogoItem(idx) {
@@ -447,6 +502,13 @@ function removeCatalogoItem(idx) {
   populateProcedimentosSelect();
   if (removed.length > 0) {
     showToast(`"${removed[0].nome}" removido do catálogo.`);
+
+    // Se logado no Supabase e item tem id, remove da nuvem
+    if (state.currentUser && state.supabaseClient && removed[0].id) {
+      state.supabaseClient.from('catalogo_servicos').delete().eq('id', removed[0].id).then(({ error }) => {
+        if (error) console.error('Erro ao excluir serviço do Supabase:', error);
+      });
+    }
   }
 }
 
@@ -488,10 +550,10 @@ async function testSupabaseConnection() {
 
   try {
     const client = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
-    const { data, error } = await client.from('atendimentos').select('id').limit(1);
+    const { data, error } = await client.from('perfis').select('id').limit(1);
 
     if (error && error.code !== 'PGRST116') {
-      showToast(`Conectou ao Supabase! (Aviso: execute supabase_schema.sql se necessário)`);
+      showToast(`Conectou ao Supabase com sucesso!`);
     } else {
       showToast('Conexão com o Supabase bem-sucedida!');
     }
@@ -506,7 +568,7 @@ function updateSupabaseStatusBadge(isConnected = null) {
   const badge = document.getElementById('badge-supabase-status');
   if (!badge) return;
 
-  if (isConnected === true) {
+  if (isConnected === true || state.currentUser) {
     badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> Supabase Conectado';
   } else if (state.supabaseUrl && state.supabaseKey) {
@@ -520,6 +582,393 @@ function updateSupabaseStatusBadge(isConnected = null) {
 
 function downloadSupabaseSQL() {
   window.open('./supabase_schema.sql', '_blank');
+}
+
+// ==============================================================================
+// AUTENTICAÇÃO E NUVEM MULTI-USUÁRIO (SUPABASE SAAS)
+// ==============================================================================
+
+function openAuthModal(initialMode = 'login') {
+  switchAuthMode(initialMode);
+  const msgEl = document.getElementById('auth-feedback-msg');
+  if (msgEl) msgEl.className = 'hidden';
+  openModal('modal-auth');
+}
+
+function closeAuthModal() {
+  closeModal('modal-auth');
+}
+
+function switchAuthMode(mode) {
+  state.authMode = mode;
+  const tabLogin = document.getElementById('auth-tab-login');
+  const tabSignup = document.getElementById('auth-tab-signup');
+  const fieldName = document.getElementById('auth-field-name');
+  const fieldPreset = document.getElementById('auth-field-preset');
+  const submitBtnText = document.getElementById('auth-submit-btn-text');
+  const modalTitle = document.getElementById('auth-modal-title');
+  const modalSubtitle = document.getElementById('auth-modal-subtitle');
+  const msgEl = document.getElementById('auth-feedback-msg');
+  if (msgEl) msgEl.className = 'hidden';
+
+  if (mode === 'signup') {
+    tabSignup?.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+    tabSignup?.classList.remove('text-gray-500');
+    tabLogin?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+    tabLogin?.classList.add('text-gray-500');
+
+    fieldName?.classList.remove('hidden');
+    fieldPreset?.classList.remove('hidden');
+    if (submitBtnText) submitBtnText.innerText = 'Criar Minha Conta & Iniciar';
+    if (modalTitle) modalTitle.innerText = 'Criar Nova Conta';
+    if (modalSubtitle) modalSubtitle.innerText = 'Configure seu espaço exclusivo e seguro na nuvem.';
+  } else {
+    tabLogin?.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+    tabLogin?.classList.remove('text-gray-500');
+    tabSignup?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+    tabSignup?.classList.add('text-gray-500');
+
+    fieldName?.classList.add('hidden');
+    fieldPreset?.classList.add('hidden');
+    if (submitBtnText) submitBtnText.innerText = 'Entrar no meu Painel';
+    if (modalTitle) modalTitle.innerText = 'Acesso ao Painel';
+    if (modalSubtitle) modalSubtitle.innerText = 'Cada membro da família acessa seus dados de forma 100% individual.';
+  }
+}
+
+function showAuthFeedback(msg, type = 'error') {
+  const el = document.getElementById('auth-feedback-msg');
+  if (!el) return;
+  el.classList.remove('hidden');
+  if (type === 'error') {
+    el.className = 'p-3 rounded-xl text-xs bg-rose-50 text-rose-700 border border-rose-200';
+  } else if (type === 'success') {
+    el.className = 'p-3 rounded-xl text-xs bg-emerald-50 text-emerald-700 border border-emerald-200';
+  } else {
+    el.className = 'p-3 rounded-xl text-xs bg-stone-100 text-stone-700 border border-stone-200';
+  }
+  el.innerText = msg;
+}
+
+function updateAuthNavbarUI(user) {
+  const pill = document.getElementById('auth-user-pill');
+  if (!pill) return;
+
+  if (user) {
+    const displayName = user.user_metadata?.nome || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+    pill.innerHTML = `
+      <div class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-white text-xs font-semibold shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="max-w-[100px] sm:max-w-[130px] truncate font-medium text-emerald-200" title="${user.email}">${displayName}</span>
+        <button onclick="handleSupabaseLogout()" class="text-white/60 hover:text-rose-400 transition ml-1 p-0.5" title="Sair da conta">
+          <i class="fa-solid fa-right-from-bracket text-xs"></i>
+        </button>
+      </div>
+    `;
+    updateSupabaseStatusBadge(true);
+    updateSyncBadge('supabase');
+  } else {
+    pill.innerHTML = `
+      <button onclick="openAuthModal()" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/10 shadow-sm" title="Acessar com E-mail e Senha">
+        <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
+        <span class="hidden sm:inline">Entrar / Cadastrar</span>
+      </button>
+    `;
+    updateSupabaseStatusBadge(false);
+  }
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+
+  if (!state.supabaseClient) {
+    showAuthFeedback('Cliente Supabase não inicializado. Verifique a URL e a Anon Key.', 'error');
+    return;
+  }
+
+  const email = document.getElementById('auth-input-email').value.trim();
+  const password = document.getElementById('auth-input-password').value;
+  const submitBtn = document.getElementById('auth-submit-btn');
+
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    if (state.authMode === 'signup') {
+      const nome = document.getElementById('auth-input-name').value.trim() || 'Meu Espaço';
+      const presetId = document.getElementById('auth-input-preset').value || 'estetica';
+      const preset = PERFIS_PRESETS[presetId] || PERFIS_PRESETS.estetica;
+
+      showAuthFeedback('Criando sua conta exclusiva...', 'info');
+
+      const { data, error } = await state.supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nome: nome,
+            preset: presetId
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.user) {
+        state.currentUser = data.user;
+
+        // Atualiza o perfil criado automaticamente com o preset escolhido
+        try {
+          await state.supabaseClient.from('perfis').upsert({
+            id: data.user.id,
+            email: data.user.email,
+            nome: nome,
+            tipo_perfil: presetId,
+            app_name: preset.appName,
+            app_subtitle: preset.appSubtitle,
+            modulos: preset.modules,
+            termos: preset.terms,
+            updated_at: new Date().toISOString()
+          });
+
+          // Se o preset tem catálogo inicial, insere no catálogo do usuário
+          if (preset.catalogo && preset.catalogo.length > 0) {
+            const catItems = preset.catalogo.map(c => ({
+              user_id: data.user.id,
+              nome: c.nome,
+              valor: c.valor,
+              sinal: c.sinal || 0,
+              ativo: true
+            }));
+            await state.supabaseClient.from('catalogo_servicos').insert(catItems);
+          }
+        } catch (e) {
+          console.warn('Aviso ao sincronizar perfil inicial:', e);
+        }
+
+        if (data.session) {
+          closeAuthModal();
+          updateAuthNavbarUI(data.user);
+          await loadUserDataFromSupabase(data.user);
+          showToast(`Conta criada com sucesso! Bem-vindo(a), ${nome}!`);
+        } else {
+          showAuthFeedback('Conta criada com sucesso! Se a confirmação de e-mail estiver ativada no seu Supabase, clique no link recebido no e-mail para ativar o login.', 'success');
+        }
+      }
+    } else {
+      // Login
+      showAuthFeedback('Autenticando...', 'info');
+      const { data, error } = await state.supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data?.user) {
+        state.currentUser = data.user;
+        closeAuthModal();
+        updateAuthNavbarUI(data.user);
+        await loadUserDataFromSupabase(data.user);
+        showToast('Login realizado com sucesso!');
+      }
+    }
+  } catch (err) {
+    console.error('Erro na autenticação:', err);
+    let msg = err.message || 'Erro ao processar autenticação.';
+    if (msg.includes('Invalid login credentials')) {
+      msg = 'E-mail ou senha incorretos.';
+    } else if (msg.includes('User already registered')) {
+      msg = 'Este e-mail já possui uma conta cadastrada. Clique em "Já tenho conta" para entrar.';
+    } else if (msg.includes('Password should be at least')) {
+      msg = 'A senha deve conter no mínimo 6 caracteres.';
+    }
+    showAuthFeedback(msg, 'error');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+async function handleSupabaseLogout() {
+  if (!confirm('Deseja realmente sair da sua conta?')) return;
+
+  if (state.supabaseClient) {
+    try {
+      await state.supabaseClient.auth.signOut();
+    } catch (e) {
+      console.warn('Erro ao deslogar do Supabase:', e);
+    }
+  }
+
+  state.currentUser = null;
+  updateAuthNavbarUI(null);
+  
+  // Recarrega os dados locais / demonstrativos
+  await loadInitialData();
+  const savedConfig = localStorage.getItem('saas_fin_config');
+  if (savedConfig) {
+    try { state.config = JSON.parse(savedConfig); } catch (e) {}
+  }
+  applyModularUI();
+  renderAll();
+  updateSyncBadge(state.apiUrl ? 'connected' : 'local');
+  showToast('Você saiu da sua conta.');
+}
+
+async function loadUserDataFromSupabase(user) {
+  if (!state.supabaseClient || !user) return;
+
+  try {
+    updateSyncBadge('syncing');
+
+    // 1. Carrega Perfil
+    const { data: perfil } = await state.supabaseClient
+      .from('perfis')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (perfil) {
+      state.config = {
+        id: perfil.tipo_perfil || 'personalizado',
+        nomePerfil: perfil.nome || user.user_metadata?.nome || 'Meu Espaço',
+        appName: perfil.app_name || 'Meu Painel Financeiro',
+        appSubtitle: perfil.app_subtitle || 'Gestão Financeira & Caixa',
+        logoIcon: perfil.logo_icon || 'fa-sparkles',
+        preset: perfil.tipo_perfil || 'personalizado',
+        modules: perfil.modulos || { operacoes: true, empresa: true, pessoal: true, outros: true, metas: true },
+        terms: perfil.termos || {
+          operacaoSingular: 'Atendimento',
+          operacaoPlural: 'Atendimentos',
+          clienteSingular: 'Cliente',
+          clientePlural: 'Clientes',
+          servicoSingular: 'Procedimento',
+          custoNegocio: 'Despesas da Empresa'
+        },
+        catalogo: []
+      };
+      localStorage.setItem('saas_fin_config', JSON.stringify(state.config));
+      applyModularUI();
+    }
+
+    // 2. Carrega Catálogo de Serviços
+    const { data: servicos } = await state.supabaseClient
+      .from('catalogo_servicos')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('ativo', true)
+      .order('nome');
+
+    if (servicos && servicos.length > 0) {
+      if (!state.config) state.config = {};
+      state.config.catalogo = servicos.map(s => ({
+        id: s.id,
+        nome: s.nome,
+        valor: parseFloat(s.valor) || 0,
+        sinal: parseFloat(s.sinal) || 0
+      }));
+    }
+    renderCatalogoTable();
+    populateProcedimentosSelect();
+
+    // 3. Carrega Metas
+    const { data: metas } = await state.supabaseClient
+      .from('metas')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (metas) {
+      state.data.metas = {
+        faturamento: parseFloat(metas.faturamento) || 5000,
+        reserva: parseFloat(metas.reserva) || 10000,
+        limitePessoal: parseFloat(metas.limite_pessoal) || 2500
+      };
+    }
+
+    // 4. Carrega Atendimentos
+    const { data: atendimentos } = await state.supabaseClient
+      .from('atendimentos')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('data', { ascending: false });
+
+    state.data.atendimentos = (atendimentos || []).map(a => ({
+      _id: a.id,
+      _rowIndex: a.id,
+      data: a.data,
+      cliente: a.cliente || '',
+      servico: a.servico || '',
+      valorTotal: parseFloat(a.valor_total) || 0,
+      sinal: parseFloat(a.sinal) || 0,
+      restante: parseFloat(a.recebido) || 0,
+      recebido: (parseFloat(a.recebido) || 0) + (parseFloat(a.sinal) || 0),
+      aReceber: parseFloat(a.a_receber) || 0,
+      formaPagamento: a.forma_pagamento || 'Pix',
+      parcelas: a.parcelas || 'À vista',
+      situacao: a.situacao || 'Concluído',
+      observacoes: a.observacoes || ''
+    }));
+
+    // 5. Carrega Despesas da Empresa
+    const { data: despesas } = await state.supabaseClient
+      .from('despesas_empresa')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('data', { ascending: false });
+
+    state.data.despesas = (despesas || []).map(d => ({
+      _id: d.id,
+      _rowIndex: d.id,
+      data: d.data,
+      categoria: d.categoria || 'Geral',
+      descricao: d.descricao || '-',
+      valor: parseFloat(d.valor) || 0,
+      formaPagamento: d.forma_pagamento || 'Pix',
+      parcelas: d.parcelas || 'À vista',
+      observacoes: d.observacoes || ''
+    }));
+
+    // 6. Carrega Receitas Extras
+    const { data: receitas } = await state.supabaseClient
+      .from('receitas_extras')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('data', { ascending: false });
+
+    state.data.outros = (receitas || []).map(r => ({
+      _id: r.id,
+      _rowIndex: r.id,
+      data: r.data,
+      descricao: r.tipo || '-',
+      valor: parseFloat(r.valor) || 0,
+      observacoes: r.observacoes || ''
+    }));
+
+    // 7. Carrega Finanças Pessoais
+    const { data: pessoal } = await state.supabaseClient
+      .from('financas_pessoais')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('data', { ascending: false });
+
+    state.data.pessoal = (pessoal || []).map(p => ({
+      _id: p.id,
+      _rowIndex: p.id,
+      data: p.data,
+      tipo: p.tipo || 'Despesa',
+      categoria: p.categoria || 'Geral',
+      descricao: p.descricao || '-',
+      valor: parseFloat(p.valor) || 0,
+      observacoes: p.observacoes || ''
+    }));
+
+    updateSyncBadge('supabase');
+    renderAll();
+  } catch (err) {
+    console.error('Erro ao carregar dados do Supabase:', err);
+    updateSyncBadge('error');
+    showToast('Erro ao carregar dados do Supabase: ' + err.message, 'warning');
+  }
 }
 
 // Obtém catálogo dinâmico de procedimentos: mescla a lista do perfil com qualquer procedimento já existente na planilha
@@ -807,7 +1256,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAll();
   applyModularUI();
 
-  // Sincroniza em segundo plano com o Google Sheets
+  // Verifica se há sessão ativa no Supabase
+  if (state.supabaseClient) {
+    try {
+      const { data: { session } } = await state.supabaseClient.auth.getSession();
+      if (session?.user) {
+        state.currentUser = session.user;
+        updateAuthNavbarUI(session.user);
+        await loadUserDataFromSupabase(session.user);
+        return; // Sessão na nuvem carregada com sucesso
+      } else {
+        updateAuthNavbarUI(null);
+      }
+    } catch (e) {
+      console.warn('Erro ao verificar sessão Supabase:', e);
+      updateAuthNavbarUI(null);
+    }
+  } else {
+    updateAuthNavbarUI(null);
+  }
+
+  // Sincroniza em segundo plano com o Google Sheets (se não estiver logado no Supabase)
   if (state.apiUrl) {
     syncWithGoogleSheets(false);
   } else {
@@ -919,7 +1388,13 @@ function setupEventListeners() {
   });
 
   // Ações de Sincronização
-  document.getElementById('btn-sync')?.addEventListener('click', () => syncWithGoogleSheets(true));
+  document.getElementById('btn-sync')?.addEventListener('click', () => {
+    if (state.currentUser) {
+      loadUserDataFromSupabase(state.currentUser);
+    } else {
+      syncWithGoogleSheets(true);
+    }
+  });
   document.getElementById('btn-save-api')?.addEventListener('click', saveApiConfig);
   document.getElementById('btn-test-api')?.addEventListener('click', testApiConnection);
 
@@ -1842,22 +2317,58 @@ async function submitAtendimento(event) {
   const normalized = normalizeAtendimento(rawItem, 0);
 
   if (rowIndex) {
-    normalized._rowIndex = parseInt(rowIndex, 10);
-    const targetIdx = state.data.atendimentos.findIndex(a => String(a._rowIndex) === String(rowIndex));
+    normalized._rowIndex = rowIndex;
+    const targetIdx = state.data.atendimentos.findIndex(a => String(a._rowIndex) === String(rowIndex) || String(a._id) === String(rowIndex));
     if (targetIdx !== -1) {
+      normalized._id = state.data.atendimentos[targetIdx]._id;
       state.data.atendimentos[targetIdx] = normalized;
     }
     showToast('Atendimento atualizado com sucesso!');
-    if (state.apiUrl) {
-      callGasApi('updateAtendimento', { rowIndex: rowIndex, ...rawItem });
-    }
   } else {
     normalized._rowIndex = 2;
     state.data.atendimentos.unshift(normalized);
     showToast('Atendimento registrado com sucesso!');
-    if (state.apiUrl) {
-      callGasApi('addAtendimento', rawItem);
+  }
+
+  // Persistência: Supabase Nuvem ou Google Sheets
+  if (state.currentUser && state.supabaseClient) {
+    const sbData = {
+      user_id: state.currentUser.id,
+      data: dataVal,
+      cliente: cliente,
+      servico: servico,
+      valor_total: valorTotal,
+      sinal: sinal,
+      recebido: restante,
+      a_receber: aReceber,
+      forma_pagamento: formaPagto,
+      parcelas: parcelas,
+      situacao: situacao,
+      observacoes: observacoes,
+      updated_at: new Date().toISOString()
+    };
+
+    if (rowIndex) {
+      const target = state.data.atendimentos.find(a => String(a._rowIndex) === String(rowIndex) || String(a._id) === String(rowIndex));
+      const sbId = target?._id || (isNaN(Number(rowIndex)) ? rowIndex : null);
+      if (sbId) {
+        state.supabaseClient.from('atendimentos').update(sbData).eq('id', sbId).then(({ error }) => {
+          if (error) console.error('Erro ao atualizar atendimento no Supabase:', error);
+        });
+      }
+    } else {
+      state.supabaseClient.from('atendimentos').insert(sbData).select().single().then(({ data: ins, error }) => {
+        if (ins) {
+          normalized._id = ins.id;
+          normalized._rowIndex = ins.id;
+        }
+        if (error) console.error('Erro ao cadastrar atendimento no Supabase:', error);
+      });
     }
+  } else if (rowIndex) {
+    if (state.apiUrl) callGasApi('updateAtendimento', { rowIndex: rowIndex, ...rawItem });
+  } else {
+    if (state.apiUrl) callGasApi('addAtendimento', rawItem);
   }
 
   saveLocalCache();
@@ -1927,22 +2438,53 @@ async function submitDespesa(event) {
   const normalized = normalizeDespesa(rawItem, 0);
 
   if (rowIndex) {
-    normalized._rowIndex = parseInt(rowIndex, 10);
-    const targetIdx = state.data.despesas.findIndex(d => String(d._rowIndex) === String(rowIndex));
+    normalized._rowIndex = rowIndex;
+    const targetIdx = state.data.despesas.findIndex(d => String(d._rowIndex) === String(rowIndex) || String(d._id) === String(rowIndex));
     if (targetIdx !== -1) {
+      normalized._id = state.data.despesas[targetIdx]._id;
       state.data.despesas[targetIdx] = normalized;
     }
     showToast('Despesa atualizada com sucesso!');
-    if (state.apiUrl) {
-      callGasApi('updateDespesa', { rowIndex: rowIndex, ...rawItem });
-    }
   } else {
     normalized._rowIndex = 2;
     state.data.despesas.unshift(normalized);
     showToast('Despesa registrada com sucesso!');
-    if (state.apiUrl) {
-      callGasApi('addDespesa', rawItem);
+  }
+
+  // Persistência: Supabase Nuvem ou Google Sheets
+  if (state.currentUser && state.supabaseClient) {
+    const sbData = {
+      user_id: state.currentUser.id,
+      data: dataVal,
+      categoria: categoria,
+      descricao: descricao,
+      valor: valor,
+      forma_pagamento: formaPagto,
+      parcelas: parcelas,
+      observacoes: observacoes
+    };
+
+    if (rowIndex) {
+      const target = state.data.despesas.find(d => String(d._rowIndex) === String(rowIndex) || String(d._id) === String(rowIndex));
+      const sbId = target?._id || (isNaN(Number(rowIndex)) ? rowIndex : null);
+      if (sbId) {
+        state.supabaseClient.from('despesas_empresa').update(sbData).eq('id', sbId).then(({ error }) => {
+          if (error) console.error('Erro ao atualizar despesa no Supabase:', error);
+        });
+      }
+    } else {
+      state.supabaseClient.from('despesas_empresa').insert(sbData).select().single().then(({ data: ins, error }) => {
+        if (ins) {
+          normalized._id = ins.id;
+          normalized._rowIndex = ins.id;
+        }
+        if (error) console.error('Erro ao cadastrar despesa no Supabase:', error);
+      });
     }
+  } else if (rowIndex) {
+    if (state.apiUrl) callGasApi('updateDespesa', { rowIndex: rowIndex, ...rawItem });
+  } else {
+    if (state.apiUrl) callGasApi('addDespesa', rawItem);
   }
 
   saveLocalCache();
@@ -2000,22 +2542,50 @@ async function submitReceitaExtra(event) {
   const normalized = normalizeOutro(rawItem, 0);
 
   if (rowIndex) {
-    normalized._rowIndex = parseInt(rowIndex, 10);
-    const targetIdx = state.data.outros.findIndex(o => String(o._rowIndex) === String(rowIndex));
+    normalized._rowIndex = rowIndex;
+    const targetIdx = state.data.outros.findIndex(o => String(o._rowIndex) === String(rowIndex) || String(o._id) === String(rowIndex));
     if (targetIdx !== -1) {
+      normalized._id = state.data.outros[targetIdx]._id;
       state.data.outros[targetIdx] = normalized;
     }
     showToast('Receita extra atualizada!');
-    if (state.apiUrl) {
-      callGasApi('updateReceitaAvulsa', { rowIndex: rowIndex, ...rawItem });
-    }
   } else {
     normalized._rowIndex = 2;
     state.data.outros.unshift(normalized);
     showToast('Receita extra registrada com sucesso!');
-    if (state.apiUrl) {
-      callGasApi('addReceitaAvulsa', rawItem);
+  }
+
+  // Persistência: Supabase Nuvem ou Google Sheets
+  if (state.currentUser && state.supabaseClient) {
+    const sbData = {
+      user_id: state.currentUser.id,
+      data: dataVal,
+      tipo: descricao,
+      valor: valor,
+      observacoes: obs
+    };
+
+    if (rowIndex) {
+      const target = state.data.outros.find(o => String(o._rowIndex) === String(rowIndex) || String(o._id) === String(rowIndex));
+      const sbId = target?._id || (isNaN(Number(rowIndex)) ? rowIndex : null);
+      if (sbId) {
+        state.supabaseClient.from('receitas_extras').update(sbData).eq('id', sbId).then(({ error }) => {
+          if (error) console.error('Erro ao atualizar receita extra no Supabase:', error);
+        });
+      }
+    } else {
+      state.supabaseClient.from('receitas_extras').insert(sbData).select().single().then(({ data: ins, error }) => {
+        if (ins) {
+          normalized._id = ins.id;
+          normalized._rowIndex = ins.id;
+        }
+        if (error) console.error('Erro ao cadastrar receita extra no Supabase:', error);
+      });
     }
+  } else if (rowIndex) {
+    if (state.apiUrl) callGasApi('updateReceitaAvulsa', { rowIndex: rowIndex, ...rawItem });
+  } else {
+    if (state.apiUrl) callGasApi('addReceitaAvulsa', rawItem);
   }
 
   saveLocalCache();
@@ -2081,22 +2651,52 @@ async function submitPessoal(event) {
   const normalized = normalizePessoal(rawItem, 0);
 
   if (rowIndex) {
-    normalized._rowIndex = parseInt(rowIndex, 10);
-    const targetIdx = state.data.pessoal.findIndex(p => String(p._rowIndex) === String(rowIndex));
+    normalized._rowIndex = rowIndex;
+    const targetIdx = state.data.pessoal.findIndex(p => String(p._rowIndex) === String(rowIndex) || String(p._id) === String(rowIndex));
     if (targetIdx !== -1) {
+      normalized._id = state.data.pessoal[targetIdx]._id;
       state.data.pessoal[targetIdx] = normalized;
     }
     showToast('Lançamento pessoal atualizado!');
-    if (state.apiUrl) {
-      callGasApi('updatePessoal', { rowIndex: rowIndex, ...rawItem });
-    }
   } else {
     normalized._rowIndex = 2;
     state.data.pessoal.unshift(normalized);
     showToast('Lançamento pessoal registrado!');
-    if (state.apiUrl) {
-      callGasApi('addPessoal', rawItem);
+  }
+
+  // Persistência: Supabase Nuvem ou Google Sheets
+  if (state.currentUser && state.supabaseClient) {
+    const sbData = {
+      user_id: state.currentUser.id,
+      data: dataVal,
+      tipo: tipo,
+      categoria: categoria,
+      descricao: descricao,
+      valor: valor,
+      observacoes: obs
+    };
+
+    if (rowIndex) {
+      const target = state.data.pessoal.find(p => String(p._rowIndex) === String(rowIndex) || String(p._id) === String(rowIndex));
+      const sbId = target?._id || (isNaN(Number(rowIndex)) ? rowIndex : null);
+      if (sbId) {
+        state.supabaseClient.from('financas_pessoais').update(sbData).eq('id', sbId).then(({ error }) => {
+          if (error) console.error('Erro ao atualizar finança pessoal no Supabase:', error);
+        });
+      }
+    } else {
+      state.supabaseClient.from('financas_pessoais').insert(sbData).select().single().then(({ data: ins, error }) => {
+        if (ins) {
+          normalized._id = ins.id;
+          normalized._rowIndex = ins.id;
+        }
+        if (error) console.error('Erro ao cadastrar finança pessoal no Supabase:', error);
+      });
     }
+  } else if (rowIndex) {
+    if (state.apiUrl) callGasApi('updatePessoal', { rowIndex: rowIndex, ...rawItem });
+  } else {
+    if (state.apiUrl) callGasApi('addPessoal', rawItem);
   }
 
   saveLocalCache();
@@ -2130,7 +2730,23 @@ async function submitProLabore(event) {
   renderAll();
   showToast(`Pró-labore de ${formatBRL(valor)} transferido com sucesso!`);
 
-  if (state.apiUrl) {
+  if (state.currentUser && state.supabaseClient) {
+    state.supabaseClient.from('financas_pessoais').insert({
+      user_id: state.currentUser.id,
+      data: dataVal,
+      tipo: 'Receita',
+      categoria: 'Retirada da empresa',
+      descricao: 'Pró-labore / Retirada',
+      valor: valor,
+      observacoes: obs
+    }).select().single().then(({ data: ins, error }) => {
+      if (ins) {
+        normalized._id = ins.id;
+        normalized._rowIndex = ins.id;
+      }
+      if (error) console.error('Erro ao transferir pró-labore no Supabase:', error);
+    });
+  } else if (state.apiUrl) {
     callGasApi('retiradaProLabore', rawItem);
   }
 }
@@ -2148,7 +2764,17 @@ function submitMetas(event) {
   renderKPIs();
   showToast('Metas financeiras salvas com sucesso!');
 
-  if (state.apiUrl) {
+  if (state.currentUser && state.supabaseClient) {
+    state.supabaseClient.from('metas').upsert({
+      user_id: state.currentUser.id,
+      faturamento,
+      reserva,
+      limite_pessoal: limitePessoal,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' }).then(({ error }) => {
+      if (error) console.error('Erro ao salvar metas no Supabase:', error);
+    });
+  } else if (state.apiUrl) {
     callGasApi('updateMetas', { faturamento, reserva, limitePessoal });
   }
 }
@@ -2160,14 +2786,30 @@ function deleteItem(sheetType, rowIndex) {
   const key = sheetType.toLowerCase();
   let list = state.data[key] || [];
   
-  const targetIndex = list.findIndex((item, idx) => (item._rowIndex || idx) === rowIndex);
+  const targetIndex = list.findIndex((item, idx) => (item._rowIndex || item._id || idx) === rowIndex || item._id === rowIndex || String(item._rowIndex) === String(rowIndex));
   if (targetIndex !== -1) {
+    const removedItem = list[targetIndex];
     list.splice(targetIndex, 1);
     saveLocalCache();
     renderAll();
     showToast('Item excluído!');
 
-    if (state.apiUrl) {
+    // Se estiver logado no Supabase, exclui na nuvem
+    if (state.currentUser && state.supabaseClient && (removedItem?._id || removedItem?.id)) {
+      const idToDelete = removedItem._id || removedItem.id;
+      const tableMap = {
+        'atendimentos': 'atendimentos',
+        'despesas': 'despesas_empresa',
+        'outros': 'receitas_extras',
+        'pessoal': 'financas_pessoais'
+      };
+      const tbl = tableMap[key];
+      if (tbl) {
+        state.supabaseClient.from(tbl).delete().eq('id', idToDelete).then(({ error }) => {
+          if (error) console.error('Erro ao excluir do Supabase:', error);
+        });
+      }
+    } else if (state.apiUrl) {
       callGasApi(`delete${sheetType}`, { rowIndex: rowIndex });
     }
   }
@@ -2270,7 +2912,10 @@ function updateSyncBadge(status) {
   const badge = document.getElementById('sync-status-badge');
   if (!badge) return;
 
-  if (status === 'connected') {
+  if (status === 'supabase') {
+    badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-pointer';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Nuvem Supabase (Privado)</span><span class="sm:hidden text-[11px]">Nuvem</span>';
+  } else if (status === 'connected') {
     badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 sm:mr-2 pulse-green"></span> <span class="hidden sm:inline">Conectado ao Google Sheets</span><span class="sm:hidden text-[11px]">Online</span>';
   } else if (status === 'syncing') {
@@ -2278,7 +2923,7 @@ function updateSyncBadge(status) {
     badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span class="hidden sm:inline">Sincronizando...</span><span class="sm:hidden text-[11px]">Sync...</span>';
   } else if (status === 'error') {
     badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 cursor-pointer';
-    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 sm:mr-2"></span> <span class="hidden sm:inline">Erro de Conexão (Verificar API)</span><span class="sm:hidden text-[11px]">Offline</span>';
+    badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5 sm:mr-2"></span> <span class="hidden sm:inline">Erro de Conexão</span><span class="sm:hidden text-[11px]">Offline</span>';
   } else {
     badge.className = 'inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200 cursor-pointer';
     badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-stone-400 mr-1.5 sm:mr-2"></span> <span class="hidden sm:inline">Modo Demonstração (Local)</span><span class="sm:hidden text-[11px]">Demo</span>';
