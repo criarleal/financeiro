@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.perfis (
     app_name TEXT DEFAULT 'Meu Painel Financeiro',
     app_subtitle TEXT DEFAULT 'Gestão Financeira & Caixa',
     logo_icon TEXT DEFAULT 'fa-sparkles',
-    tipo_perfil TEXT DEFAULT 'personalizado', -- 'estetica', 'barbearia', 'manicure', 'pessoal', 'personalizado'
+    tipo_perfil TEXT DEFAULT 'personalizado', -- 'estetica', 'barbearia', 'manicure', 'pessoal', 'empresa', 'personalizado'
     modulos JSONB DEFAULT '{"operacoes": true, "empresa": true, "pessoal": true, "outros": true, "metas": true}'::jsonb,
     termos JSONB DEFAULT '{"operacaoSingular": "Atendimento", "operacaoPlural": "Atendimentos", "clienteSingular": "Cliente", "clientePlural": "Clientes", "servicoSingular": "Procedimento", "custoNegocio": "Despesas da Empresa"}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
