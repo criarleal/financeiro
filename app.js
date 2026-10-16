@@ -6,7 +6,7 @@
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.3.2';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
