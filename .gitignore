@@ -1,0 +1,6 @@
+# Senhas e chaves locais
+supabasePW.txt
+.env
+.env.local
+*.pem
+*.key
