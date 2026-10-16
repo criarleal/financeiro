@@ -1,12 +1,12 @@
 /**
  * ==============================================================================
- * SISTEMA FINANCEIRO EXCLUSIVO - BEATRIZ LEAL BEAUTY
- * Lógica do Cliente, Cálculos, Gráficos e Sincronização Apps Script
+ * SISTEMA FINANCEIRO UNIVERSAL & MODULAR
+ * Lógica do Cliente, Cálculos, Gráficos e Sincronização Supabase
  * ==============================================================================
  */
 
 // Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
-const APP_VERSION = '1.2.2';
+const APP_VERSION = '1.2.3';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -15,7 +15,7 @@ const PERFIS_PRESETS = {
   estetica: {
     id: 'estetica',
     nomePerfil: 'Estética & Beleza',
-    appName: 'Beatriz Leal Beauty',
+    appName: 'Studio de Estética & Beleza',
     appSubtitle: 'Gestão Financeira & Caixa',
     logoIcon: 'fa-sparkles',
     modules: {
