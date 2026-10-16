@@ -56,51 +56,21 @@
        ==================================================================== -->
   <div class="sticky top-0 z-40 shadow-xl">
     <header class="bg-[#1A1A1A] text-white border-b border-[#D4888C]/20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-col gap-2.5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3">
         
-        <!-- Linha 1: Marca / Logo (Esquerda) e Usuário / Auth Pill (Direita - isolado no topo direito) -->
-        <div class="flex items-center justify-between gap-4">
-          <!-- Logo e Título com Suporte Modular -->
-          <div class="flex items-center gap-3">
-            <div id="header-logo-container" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md cursor-pointer transition hover:scale-105 shrink-0" onclick="switchTab('modulos')" title="Personalizar Módulos do Sistema">
-              <i id="header-logo-icon" class="fa-solid fa-sparkles text-sm sm:text-base"></i>
-            </div>
-            <div class="border-l border-white/20 pl-3">
-              <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[170px] sm:max-w-none">Beatriz Leal Beauty</span>
-              <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[170px] sm:max-w-none">Gestão Financeira & Caixa</span>
-            </div>
+        <!-- Logo e Título com Suporte Modular -->
+        <div class="flex items-center gap-3">
+          <div id="header-logo-container" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#D4888C] to-[#C5A059] flex items-center justify-center text-white shadow-md cursor-pointer transition hover:scale-105 shrink-0" onclick="switchTab('modulos')" title="Personalizar Módulos do Sistema">
+            <i id="header-logo-icon" class="fa-solid fa-sparkles text-sm sm:text-base"></i>
           </div>
-
-          <!-- Botão / Pill de Usuário Nuvem (Supabase Auth) - Na direita, acima da data -->
-          <div id="auth-user-pill" class="shrink-0">
-            <button onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-2 transition border border-white/15 shadow-sm hover:border-[#D4888C]" title="Acessar ou Criar Conta">
-              <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
-              <span class="hidden sm:inline">Entrar / Cadastrar</span>
-            </button>
+          <div class="border-l border-white/20 pl-3">
+            <span id="header-app-title" class="text-xs sm:text-sm font-bold tracking-wider text-white block uppercase font-montserrat truncate max-w-[170px] sm:max-w-none">Beatriz Leal Beauty</span>
+            <span id="header-app-subtitle" class="text-[10px] text-white/70 font-light block truncate max-w-[170px] sm:max-w-none">Gestão Financeira & Caixa</span>
           </div>
         </div>
 
-        <!-- Linha 2: Ações Operacionais (Esquerda) e Seletor de Período (Direita) -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-white/10">
-          <!-- Badge de Status e Ações Rápidas -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <!-- Botão Personalizar Perfil / Módulos -->
-            <button onclick="switchTab('modulos')" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition border border-white/10 shadow-sm" title="Mudar Perfil ou Módulos do Sistema">
-              <i class="fa-solid fa-shapes text-[#D4888C]"></i>
-              <span id="header-perfil-tag" class="hidden sm:inline">Personalizar</span>
-            </button>
-
-            <div id="sync-status-badge" onclick="openAuthModal()" class="cursor-pointer" title="Status da Nuvem Supabase">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
-                <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Carregando...
-              </span>
-            </div>
-
-            <button id="btn-sync" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-[#D4888C] text-white flex items-center justify-center transition shadow" title="Sincronizar Dados">
-              <i class="fa-solid fa-rotate text-xs"></i>
-            </button>
-          </div>
-
+        <!-- Controles: Seletor de Período e Usuário / Auth Pill -->
+        <div class="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto">
           <!-- Seletor de Período (Mês e Ano) -->
           <div class="flex items-center bg-[#252221] border border-white/10 rounded-full px-2 py-1 shadow-inner shrink-0">
             <button id="btn-prev-month" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white transition" title="Mês Anterior">
@@ -131,6 +101,14 @@
 
             <button id="btn-next-month" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/70 hover:text-white transition" title="Próximo Mês">
               <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Botão / Pill de Usuário Nuvem (Supabase Auth) -->
+          <div id="auth-user-pill" class="shrink-0">
+            <button onclick="openAuthModal()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-2 transition border border-white/15 shadow-sm hover:border-[#D4888C]" title="Acessar ou Criar Conta">
+              <i class="fa-solid fa-user-lock text-[#D4888C]"></i>
+              <span class="hidden sm:inline">Entrar / Cadastrar</span>
             </button>
           </div>
         </div>
@@ -901,7 +879,7 @@
           </div>
 
           <div id="badge-supabase-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">
-            <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local / Planilha
+            <span class="w-2 h-2 rounded-full bg-stone-400 mr-2"></span> Modo Local (Demonstração)
           </div>
         </div>
 
@@ -940,9 +918,12 @@
             <p class="leading-relaxed">
               O arquivo <code class="bg-stone-200 px-1 py-0.5 rounded text-rose-700 font-mono">supabase_schema.sql</code> já foi gerado na raiz do repositório. Basta copiá-lo e executá-lo no SQL Editor do Supabase para criar as tabelas e regras de segurança (RLS).
             </p>
-            <div class="pt-2">
+            <div class="pt-2 flex flex-wrap items-center gap-2">
               <button onclick="downloadSupabaseSQL()" class="px-3.5 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 text-[11px] font-semibold flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-download"></i> Baixar Script supabase_schema.sql
+              </button>
+              <button onclick="forceAppRefresh()" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold flex items-center gap-1.5 transition border border-stone-200" title="Limpar cache local do navegador">
+                <i class="fa-solid fa-arrows-rotate text-[#D4888C]"></i> Limpar Cache
               </button>
             </div>
           </div>
@@ -1041,8 +1022,8 @@
             </p>
             
             <div class="pt-2 border-t border-white/5 flex items-center justify-between">
-              <button onclick="switchTab('config')" class="text-xs text-[#D4888C] hover:text-rose-300 font-semibold flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-sliders text-[11px]"></i> Gerenciar Conexão
+              <button onclick="switchTab('modulos')" class="text-xs text-[#D4888C] hover:text-rose-300 font-semibold flex items-center gap-1.5 transition" title="Configurações de Nuvem e Módulos">
+                <i class="fa-solid fa-sliders text-[11px]"></i> Ajustes de Nuvem
               </button>
               <button onclick="forceAppRefresh()" class="text-xs text-stone-400 hover:text-white transition flex items-center gap-1.5" title="Atualizar dados">
                 <i class="fa-solid fa-arrows-rotate text-[11px] text-[#C5A059]"></i> Sincronizar
