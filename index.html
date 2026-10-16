@@ -46,7 +46,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Custom Styles com versão -->
-  <link rel="stylesheet" href="./styles.css?v=1.3.5">
+  <link rel="stylesheet" href="./styles.css?v=1.3.6">
 </head>
 
 <body class="antialiased selection:bg-[#D4888C] selection:text-white">
@@ -490,6 +490,9 @@
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
               <tr id="thead-tr-atendimentos">
+                <th class="w-10 text-center px-3 py-3" title="Selecionar Todos">
+                  <input type="checkbox" id="chk-all-atendimentos" onchange="toggleSelectAll('atendimentos', event)" class="custom-checkbox cursor-pointer" title="Selecionar Todos">
+                </th>
                 <th class="sortable-th whitespace-nowrap active-sort" onclick="toggleSortAtendimentos('data')" id="th-sort-data" title="Clique para ordenar por Data (Mais novos ou mais antigos)">
                   <div class="flex items-center gap-1.5">
                     <span>Data</span>
@@ -572,18 +575,107 @@
         </button>
       </div>
 
+      <!-- Barra de Filtros, Busca e Ações Rápidas (Despesas) -->
+      <div class="card-lux p-4 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
+            <!-- Input Busca -->
+            <div class="relative flex-1 w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="text" id="search-despesas" placeholder="Buscar despesa por descrição ou categoria..." class="lux-input w-full pl-9 text-xs">
+            </div>
+
+            <!-- Filtro Categoria -->
+            <div class="w-full sm:w-56">
+              <select id="filter-cat-despesas" class="lux-input text-xs cursor-pointer w-full">
+                <option value="all">Todas as Categorias</option>
+                <option value="Materiais">Materiais</option>
+                <option value="Aluguel">Aluguel / Espaço</option>
+                <option value="Luz/Água">Contas (Luz/Água/Net)</option>
+                <option value="Marketing">Marketing / Tráfego</option>
+                <option value="Equipamentos">Equipamentos</option>
+                <option value="Cursos">Cursos / Especializações</option>
+                <option value="Outros">Outras Despesas</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <button id="btn-reset-filters-desp" onclick="resetDespesasFilters()" class="px-3.5 py-2.5 rounded-xl border border-stone-200 hover:border-[#C5A059] hover:text-[#C5A059] bg-stone-50 hover:bg-stone-100 text-stone-600 text-xs font-semibold transition flex items-center justify-center gap-1.5 flex-1 md:flex-none whitespace-nowrap" title="Restaurar ordem padrão e limpar filtros">
+              <i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão
+            </button>
+          </div>
+        </div>
+
+        <!-- Submenu de Filtros Rápidos (Despesas) -->
+        <div class="pt-2 border-t border-black/5 flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 text-xs text-stone-400 font-semibold uppercase tracking-wider mr-1">
+            <i class="fa-solid fa-bolt text-[#C5A059] text-[11px]"></i>
+            <span class="text-[10px]">Filtros Rápidos:</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 flex-1">
+            <button type="button" onclick="applyQuickFilterDespesas('recentes')" id="pill-desp-recentes" class="quick-pill active px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais novas no topo (ordem padrão)">
+              <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Mais Novas
+            </button>
+            <button type="button" onclick="applyQuickFilterDespesas('antigas')" id="pill-desp-antigas" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais antigas no topo">
+              <i class="fa-solid fa-arrow-up-wide-short text-[10px]"></i> Mais Antigas
+            </button>
+            <button type="button" onclick="applyQuickFilterDespesas('maior_valor')" id="pill-desp-maior_valor" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Maior valor primeiro">
+              <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Maior Valor
+            </button>
+            <button type="button" onclick="applyQuickFilterDespesas('categoria')" id="pill-desp-categoria" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Ordem alfabética por categoria">
+              <i class="fa-solid fa-tag text-[10px]"></i> Categoria (A-Z)
+            </button>
+            <button type="button" onclick="applyQuickFilterDespesas('descricao')" id="pill-desp-descricao" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Ordem alfabética por descrição">
+              <i class="fa-solid fa-arrow-down-a-z text-[10px]"></i> Descrição (A-Z)
+            </button>
+          </div>
+          <span id="active-sort-indicator-desp" class="text-[11px] text-[#C5A059] font-medium hidden sm:inline-block">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> Mais novas primeiro
+          </span>
+        </div>
+      </div>
+
       <!-- Modo Desktop: Tabela de Despesas -->
       <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
-              <tr>
-                <th>Data</th>
-                <th>Categoria</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Pagamento</th>
-                <th class="text-right">Ações</th>
+              <tr id="thead-tr-despesas">
+                <th class="w-10 text-center px-3 py-3" title="Selecionar Todos">
+                  <input type="checkbox" id="chk-all-despesas" onchange="toggleSelectAll('despesas', event)" class="custom-checkbox cursor-pointer" title="Selecionar Todos">
+                </th>
+                <th class="sortable-th whitespace-nowrap active-sort" onclick="toggleSortDespesas('data')" id="th-sort-desp-data" title="Clique para ordenar por Data (Mais novas ou mais antigas)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Data</span>
+                    <i id="sort-icon-desp-data" class="fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortDespesas('categoria')" id="th-sort-desp-categoria" title="Clique para ordenar por Categoria (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Categoria</span>
+                    <i id="sort-icon-desp-categoria" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortDespesas('descricao')" id="th-sort-desp-descricao" title="Clique para ordenar por Descrição (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Descrição</span>
+                    <i id="sort-icon-desp-descricao" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortDespesas('valor')" id="th-sort-desp-valor" title="Clique para ordenar por Valor (Maior ou menor)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Valor</span>
+                    <i id="sort-icon-desp-valor" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortDespesas('formaPagamento')" id="th-sort-desp-formaPagamento" title="Clique para ordenar por Forma de Pagamento">
+                  <div class="flex items-center gap-1.5">
+                    <span>Pagamento</span>
+                    <i id="sort-icon-desp-formaPagamento" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody id="tbody-despesas" class="divide-y divide-black/5 font-montserrat">
@@ -616,17 +708,84 @@
         </button>
       </div>
 
+      <!-- Barra de Filtros, Busca e Ações Rápidas (Receitas Extras) -->
+      <div class="card-lux p-4 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
+            <!-- Input Busca -->
+            <div class="relative flex-1 w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="text" id="search-outros" placeholder="Buscar receita extra ou produto por descrição ou observação..." class="lux-input w-full pl-9 text-xs">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <button id="btn-reset-filters-outros" onclick="resetOutrosFilters()" class="px-3.5 py-2.5 rounded-xl border border-stone-200 hover:border-[#C5A059] hover:text-[#C5A059] bg-stone-50 hover:bg-stone-100 text-stone-600 text-xs font-semibold transition flex items-center justify-center gap-1.5 flex-1 md:flex-none whitespace-nowrap" title="Restaurar ordem padrão e limpar filtros">
+              <i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão
+            </button>
+          </div>
+        </div>
+
+        <!-- Submenu de Filtros Rápidos (Receitas Extras) -->
+        <div class="pt-2 border-t border-black/5 flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 text-xs text-stone-400 font-semibold uppercase tracking-wider mr-1">
+            <i class="fa-solid fa-bolt text-[#C5A059] text-[11px]"></i>
+            <span class="text-[10px]">Filtros Rápidos:</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 flex-1">
+            <button type="button" onclick="applyQuickFilterOutros('recentes')" id="pill-outros-recentes" class="quick-pill active px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais novas no topo (ordem padrão)">
+              <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Mais Novas
+            </button>
+            <button type="button" onclick="applyQuickFilterOutros('antigas')" id="pill-outros-antigas" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais antigas no topo">
+              <i class="fa-solid fa-arrow-up-wide-short text-[10px]"></i> Mais Antigas
+            </button>
+            <button type="button" onclick="applyQuickFilterOutros('maior_valor')" id="pill-outros-maior_valor" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Maior valor primeiro">
+              <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Maior Valor
+            </button>
+            <button type="button" onclick="applyQuickFilterOutros('descricao')" id="pill-outros-descricao" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Ordem alfabética por descrição">
+              <i class="fa-solid fa-arrow-down-a-z text-[10px]"></i> Descrição (A-Z)
+            </button>
+          </div>
+          <span id="active-sort-indicator-outros" class="text-[11px] text-[#C5A059] font-medium hidden sm:inline-block">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> Mais novas primeiro
+          </span>
+        </div>
+      </div>
+
       <!-- Modo Desktop: Tabela de Receitas Extras -->
       <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
-              <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Valor Recebido</th>
-                <th>Observações</th>
-                <th class="text-right">Ações</th>
+              <tr id="thead-tr-outros">
+                <th class="w-10 text-center px-3 py-3" title="Selecionar Todos">
+                  <input type="checkbox" id="chk-all-outros" onchange="toggleSelectAll('outros', event)" class="custom-checkbox cursor-pointer" title="Selecionar Todos">
+                </th>
+                <th class="sortable-th whitespace-nowrap active-sort" onclick="toggleSortOutros('data')" id="th-sort-outros-data" title="Clique para ordenar por Data (Mais novas ou mais antigas)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Data</span>
+                    <i id="sort-icon-outros-data" class="fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortOutros('descricao')" id="th-sort-outros-descricao" title="Clique para ordenar por Descrição (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Descrição</span>
+                    <i id="sort-icon-outros-descricao" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortOutros('valor')" id="th-sort-outros-valor" title="Clique para ordenar por Valor Recebido (Maior ou menor)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Valor Recebido</span>
+                    <i id="sort-icon-outros-valor" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortOutros('observacoes')" id="th-sort-outros-observacoes" title="Clique para ordenar por Observações">
+                  <div class="flex items-center gap-1.5">
+                    <span>Observações</span>
+                    <i id="sort-icon-outros-observacoes" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody id="tbody-outros" class="divide-y divide-black/5 font-montserrat">
@@ -664,18 +823,105 @@
         </div>
       </div>
 
+      <!-- Barra de Filtros, Busca e Ações Rápidas (Finanças Pessoais) -->
+      <div class="card-lux p-4 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
+            <!-- Input Busca -->
+            <div class="relative flex-1 w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="text" id="search-pessoal" placeholder="Buscar lançamento pessoal por descrição ou categoria..." class="lux-input w-full pl-9 text-xs">
+            </div>
+
+            <!-- Filtro Tipo -->
+            <div class="w-full sm:w-56">
+              <select id="filter-tipo-pessoal" class="lux-input text-xs cursor-pointer w-full">
+                <option value="all">Todos os Tipos</option>
+                <option value="receita">Entradas / Pró-labore</option>
+                <option value="despesa">Gastos Pessoais</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <button id="btn-reset-filters-pess" onclick="resetPessoalFilters()" class="px-3.5 py-2.5 rounded-xl border border-stone-200 hover:border-[#C5A059] hover:text-[#C5A059] bg-stone-50 hover:bg-stone-100 text-stone-600 text-xs font-semibold transition flex items-center justify-center gap-1.5 flex-1 md:flex-none whitespace-nowrap" title="Restaurar ordem padrão e limpar filtros">
+              <i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão
+            </button>
+          </div>
+        </div>
+
+        <!-- Submenu de Filtros Rápidos (Finanças Pessoais) -->
+        <div class="pt-2 border-t border-black/5 flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 text-xs text-stone-400 font-semibold uppercase tracking-wider mr-1">
+            <i class="fa-solid fa-bolt text-[#C5A059] text-[11px]"></i>
+            <span class="text-[10px]">Filtros Rápidos:</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 flex-1">
+            <button type="button" onclick="applyQuickFilterPessoal('recentes')" id="pill-pess-recentes" class="quick-pill active px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais novos no topo (ordem padrão)">
+              <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Mais Novos
+            </button>
+            <button type="button" onclick="applyQuickFilterPessoal('antigas')" id="pill-pess-antigas" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais antigos no topo">
+              <i class="fa-solid fa-arrow-up-wide-short text-[10px]"></i> Mais Antigos
+            </button>
+            <button type="button" onclick="applyQuickFilterPessoal('entradas')" id="pill-pess-entradas" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Filtrar Entradas / Pró-labore">
+              <i class="fa-solid fa-arrow-down-long text-emerald-600 text-[10px]"></i> Entradas / Pró-labore
+            </button>
+            <button type="button" onclick="applyQuickFilterPessoal('gastos')" id="pill-pess-gastos" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Filtrar Gastos Pessoais">
+              <i class="fa-solid fa-arrow-up-long text-rose-500 text-[10px]"></i> Gastos Pessoais
+            </button>
+            <button type="button" onclick="applyQuickFilterPessoal('maior_valor')" id="pill-pess-maior_valor" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Maior valor primeiro">
+              <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Maior Valor
+            </button>
+            <button type="button" onclick="applyQuickFilterPessoal('categoria')" id="pill-pess-categoria" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Ordem alfabética por categoria">
+              <i class="fa-solid fa-tag text-[10px]"></i> Categoria (A-Z)
+            </button>
+          </div>
+          <span id="active-sort-indicator-pess" class="text-[11px] text-[#C5A059] font-medium hidden sm:inline-block">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> Mais novos primeiro
+          </span>
+        </div>
+      </div>
+
       <!-- Modo Desktop: Tabela de Finanças Pessoais -->
       <div class="card-lux overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
-              <tr>
-                <th>Data</th>
-                <th>Tipo</th>
-                <th>Categoria</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th class="text-right">Ações</th>
+              <tr id="thead-tr-pessoal">
+                <th class="w-10 text-center px-3 py-3" title="Selecionar Todos">
+                  <input type="checkbox" id="chk-all-pessoal" onchange="toggleSelectAll('pessoal', event)" class="custom-checkbox cursor-pointer" title="Selecionar Todos">
+                </th>
+                <th class="sortable-th whitespace-nowrap active-sort" onclick="toggleSortPessoal('data')" id="th-sort-pess-data" title="Clique para ordenar por Data (Mais novos ou mais antigos)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Data</span>
+                    <i id="sort-icon-pess-data" class="fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortPessoal('tipo')" id="th-sort-pess-tipo" title="Clique para ordenar por Tipo">
+                  <div class="flex items-center gap-1.5">
+                    <span>Tipo</span>
+                    <i id="sort-icon-pess-tipo" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortPessoal('categoria')" id="th-sort-pess-categoria" title="Clique para ordenar por Categoria (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Categoria</span>
+                    <i id="sort-icon-pess-categoria" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortPessoal('descricao')" id="th-sort-pess-descricao" title="Clique para ordenar por Descrição (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Descrição</span>
+                    <i id="sort-icon-pess-descricao" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortPessoal('valor')" id="th-sort-pess-valor" title="Clique para ordenar por Valor (Maior ou menor)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Valor</span>
+                    <i id="sort-icon-pess-valor" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody id="tbody-pessoal" class="divide-y divide-black/5 font-montserrat">
@@ -1222,9 +1468,14 @@
           </div>
         </div>
 
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeModal('modal-novo-atendimento')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
-          <button id="modal-atend-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Atendimento</button>
+        <div class="pt-3 flex items-center justify-between gap-2 border-t border-black/5 mt-4">
+          <button type="button" id="modal-atend-btn-delete" onclick="handleDeleteFromModal('Atendimentos')" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-regular fa-trash-can"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal('modal-novo-atendimento')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button id="modal-atend-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Atendimento</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1296,9 +1547,14 @@
           <input type="text" id="modal-desp-obs" placeholder="Ex: NF 1234, comprado no fornecedor X" class="lux-input w-full text-xs">
         </div>
 
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeModal('modal-nova-despesa')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
-          <button id="modal-desp-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Despesa</button>
+        <div class="pt-3 flex items-center justify-between gap-2 border-t border-black/5 mt-4">
+          <button type="button" id="modal-desp-btn-delete" onclick="handleDeleteFromModal('Despesas')" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-regular fa-trash-can"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal('modal-nova-despesa')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button id="modal-desp-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Despesa</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1377,9 +1633,14 @@
           <input type="text" id="modal-extra-obs" class="lux-input w-full text-xs">
         </div>
 
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeModal('modal-nova-receita-extra')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
-          <button id="modal-extra-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Receita</button>
+        <div class="pt-3 flex items-center justify-between gap-2 border-t border-black/5 mt-4">
+          <button type="button" id="modal-extra-btn-delete" onclick="handleDeleteFromModal('Outros')" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-regular fa-trash-can"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal('modal-nova-receita-extra')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button id="modal-extra-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar Receita</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1439,9 +1700,14 @@
           <input type="text" id="modal-pess-obs" placeholder="Observações adicionais..." class="lux-input w-full text-xs">
         </div>
 
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeModal('modal-novo-pessoal')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
-          <button id="modal-pess-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar</button>
+        <div class="pt-3 flex items-center justify-between gap-2 border-t border-black/5 mt-4">
+          <button type="button" id="modal-pess-btn-delete" onclick="handleDeleteFromModal('Pessoal')" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-regular fa-trash-can"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal('modal-novo-pessoal')" class="px-4 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button id="modal-pess-submit-btn" type="submit" class="rose-button px-5 py-2.5 rounded-xl text-xs font-semibold">Salvar</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1475,9 +1741,14 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeModal('modal-add-catalogo')" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>
-          <button type="submit" id="modal-cat-submit-btn" class="rose-button px-5 py-2 rounded-xl font-bold">Adicionar ao Catálogo</button>
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-black/5 mt-3">
+          <button type="button" id="modal-cat-btn-delete" onclick="handleDeleteCatalogoFromModal()" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-regular fa-trash-can"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal('modal-add-catalogo')" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="submit" id="modal-cat-submit-btn" class="rose-button px-5 py-2 rounded-xl font-bold">Adicionar ao Catálogo</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1609,11 +1880,28 @@
     </div>
   </div>
 
+  <!-- Barra Flutuante de Ações em Massa (Exclusão em Massa) -->
+  <div id="bulk-action-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1A1A1A] text-white px-4 sm:px-6 py-3 rounded-2xl shadow-2xl border border-[#D4888C]/40 flex items-center justify-between gap-3 sm:gap-6 animate-slide-up w-[92%] sm:w-auto min-w-[320px]">
+    <div class="flex items-center gap-2.5">
+      <span class="w-7 h-7 rounded-lg bg-[#D4888C]/20 text-[#D4888C] flex items-center justify-center font-bold text-xs" id="bulk-selected-badge">0</span>
+      <span class="text-xs sm:text-sm font-semibold tracking-wide text-white/90" id="bulk-selected-text">0 selecionados</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="deleteBulkSelected()" class="px-3.5 sm:px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm hover:shadow-rose-600/30">
+        <i class="fa-regular fa-trash-can"></i>
+        <span>Excluir Selecionados</span>
+      </button>
+      <button onclick="clearCurrentTabSelection()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center transition" title="Desmarcar todos">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- Container de Notificações Toast -->
   <div id="toast-container" class="fixed bottom-24 sm:bottom-20 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm sm:max-w-md"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.3.5"></script>
+  <script src="./app.js?v=1.3.6"></script>
 </body>
 
 </html>

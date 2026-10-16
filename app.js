@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Ordenação e Filtros Rápidos)
-const APP_VERSION = '1.3.5';
+// Versão da Aplicação (Atualizada para Cache Busting - Edição ao Clicar na Linha + Botão Deletar no Modal + Seleção e Exclusão em Massa)
+const APP_VERSION = '1.3.6';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -178,13 +178,24 @@ const state = {
   filters: {
     search: '',
     status: 'all',
-    payment: 'all'
+    payment: 'all',
+    despesasSearch: '',
+    despesasCat: 'all',
+    outrosSearch: '',
+    pessoalSearch: '',
+    pessoalTipo: 'all'
   },
   sort: {
     atendimentos: { field: 'data', direction: 'desc' },
     despesas: { field: 'data', direction: 'desc' },
     outros: { field: 'data', direction: 'desc' },
     pessoal: { field: 'data', direction: 'desc' }
+  },
+  selectedItems: {
+    atendimentos: new Set(),
+    despesas: new Set(),
+    outros: new Set(),
+    pessoal: new Set()
   },
   config: null,
   supabaseUrl: localStorage.getItem('saas_supabase_url') || 'https://vvpmwpgvdcdutzlofnwx.supabase.co',
@@ -492,11 +503,11 @@ function renderCatalogoTable() {
   }
 
   tbody.innerHTML = catalog.map((item, idx) => `
-    <tr class="hover:bg-stone-50 transition">
+    <tr class="hover:bg-stone-50 transition row-clickable cursor-pointer" onclick="handleCatalogoRowClick(event, ${idx})" title="Clique para editar este serviço">
       <td class="py-2.5 px-3 font-semibold text-gray-800">${item.nome}</td>
       <td class="py-2.5 px-3 font-bold text-gray-900">${formatBRL(item.valor)}</td>
       <td class="py-2.5 px-3 text-stone-600">${item.sinal > 0 ? formatBRL(item.sinal) : 'Sem sinal'}</td>
-      <td class="py-2.5 px-3 text-right whitespace-nowrap">
+      <td class="py-2.5 px-3 text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
         <button onclick="openEditCatalogoItem(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Serviço">
           <i class="fa-regular fa-pen-to-square text-xs"></i>
         </button>
@@ -508,6 +519,23 @@ function renderCatalogoTable() {
   `).join('');
 }
 
+function handleCatalogoRowClick(event, idx) {
+  if (event && event.target && event.target.closest('button, input, select, label, a, .no-row-click')) return;
+  openEditCatalogoItem(idx);
+}
+
+function handleDeleteCatalogoFromModal() {
+  const idxVal = document.getElementById('modal-cat-index')?.value;
+  if (idxVal === '' || idxVal === null || idxVal === undefined) return;
+  const idx = parseInt(idxVal, 10);
+  if (isNaN(idx)) return;
+  const item = state.config?.catalogo?.[idx];
+  const nome = item?.nome || 'este serviço';
+  if (!confirm(`Deseja realmente excluir "${nome}" do catálogo?`)) return;
+  removeCatalogoItem(idx);
+  closeModal('modal-add-catalogo');
+}
+
 function openModalAddCatalogoItem() {
   const indexInput = document.getElementById('modal-cat-index');
   if (indexInput) indexInput.value = '';
@@ -515,6 +543,7 @@ function openModalAddCatalogoItem() {
   if (titleEl) titleEl.innerText = 'Novo Serviço / Item do Catálogo';
   const submitBtn = document.getElementById('modal-cat-submit-btn');
   if (submitBtn) submitBtn.innerText = 'Adicionar ao Catálogo';
+  document.getElementById('modal-cat-btn-delete')?.classList.add('hidden');
 
   document.getElementById('modal-cat-nome').value = '';
   document.getElementById('modal-cat-valor').value = '';
@@ -533,6 +562,7 @@ function openEditCatalogoItem(idx) {
   if (titleEl) titleEl.innerText = 'Editar Serviço / Item do Catálogo';
   const submitBtn = document.getElementById('modal-cat-submit-btn');
   if (submitBtn) submitBtn.innerText = 'Salvar Alterações';
+  document.getElementById('modal-cat-btn-delete')?.classList.remove('hidden');
 
   document.getElementById('modal-cat-nome').value = item.nome || '';
   document.getElementById('modal-cat-valor').value = item.valor != null ? item.valor : '';
@@ -1604,6 +1634,34 @@ function setupEventListeners() {
     renderAtendimentosTable();
   });
 
+  // Filtros de Despesas
+  document.getElementById('search-despesas')?.addEventListener('input', (e) => {
+    state.filters.despesasSearch = e.target.value;
+    renderDespesasTable();
+  });
+
+  document.getElementById('filter-cat-despesas')?.addEventListener('change', (e) => {
+    state.filters.despesasCat = e.target.value;
+    renderDespesasTable();
+  });
+
+  // Filtros de Receitas Extras
+  document.getElementById('search-outros')?.addEventListener('input', (e) => {
+    state.filters.outrosSearch = e.target.value;
+    renderOutrosTable();
+  });
+
+  // Filtros de Finanças Pessoais
+  document.getElementById('search-pessoal')?.addEventListener('input', (e) => {
+    state.filters.pessoalSearch = e.target.value;
+    renderPessoalTable();
+  });
+
+  document.getElementById('filter-tipo-pessoal')?.addEventListener('change', (e) => {
+    state.filters.pessoalTipo = e.target.value;
+    renderPessoalTable();
+  });
+
   // Ações de Sincronização
   document.getElementById('btn-sync')?.addEventListener('click', () => {
     if (state.currentUser) {
@@ -1722,6 +1780,11 @@ function switchTab(tabId, updateUrl = true) {
 
   if (tabId === 'dashboard') {
     renderCharts();
+  }
+
+  // Atualiza barra de ações em massa conforme a aba ativa
+  if (typeof updateBulkActionBar === 'function') {
+    updateBulkActionBar();
   }
 }
 
@@ -2153,6 +2216,784 @@ function updateSortHeadersUI() {
   }
 }
 
+// ------------------------------------------------------------------------------
+// ORDENAÇÃO E FILTROS RÁPIDOS: DESPESAS DA EMPRESA (PJ)
+// ------------------------------------------------------------------------------
+function toggleSortDespesas(field) {
+  if (!state.sort) state.sort = {};
+  if (!state.sort.despesas) {
+    state.sort.despesas = { field: 'data', direction: 'desc' };
+  }
+
+  const current = state.sort.despesas;
+  if (current.field === field) {
+    current.direction = current.direction === 'desc' ? 'asc' : 'desc';
+  } else {
+    current.field = field;
+    if (['categoria', 'descricao', 'formaPagamento'].includes(field)) {
+      current.direction = 'asc';
+    } else {
+      current.direction = 'desc';
+    }
+  }
+
+  renderDespesasTable();
+}
+
+function applyQuickFilterDespesas(filterKey) {
+  if (!state.sort) state.sort = {};
+  if (!state.filters) state.filters = {};
+
+  if (filterKey === 'recentes') {
+    state.sort.despesas = { field: 'data', direction: 'desc' };
+  } else if (filterKey === 'antigas') {
+    state.sort.despesas = { field: 'data', direction: 'asc' };
+  } else if (filterKey === 'maior_valor') {
+    state.sort.despesas = { field: 'valor', direction: 'desc' };
+  } else if (filterKey === 'categoria') {
+    state.sort.despesas = { field: 'categoria', direction: 'asc' };
+  } else if (filterKey === 'descricao') {
+    state.sort.despesas = { field: 'descricao', direction: 'asc' };
+  }
+
+  renderDespesasTable();
+}
+
+function resetDespesasFilters() {
+  if (!state.filters) state.filters = {};
+  state.filters.despesasSearch = '';
+  state.filters.despesasCat = 'all';
+
+  const searchInput = document.getElementById('search-despesas');
+  if (searchInput) searchInput.value = '';
+
+  const filterCat = document.getElementById('filter-cat-despesas');
+  if (filterCat) filterCat.value = 'all';
+
+  if (!state.sort) state.sort = {};
+  state.sort.despesas = { field: 'data', direction: 'desc' };
+
+  renderDespesasTable();
+  showToast('Ordem padrão de Despesas restaurada (Mais novas primeiro)!');
+}
+
+function updateSortHeadersDespesasUI() {
+  const sortCfg = state.sort?.despesas || { field: 'data', direction: 'desc' };
+  const field = sortCfg.field;
+  const direction = sortCfg.direction;
+
+  const columns = ['data', 'categoria', 'descricao', 'valor', 'formaPagamento'];
+
+  columns.forEach(col => {
+    const th = document.getElementById('th-sort-desp-' + col);
+    const icon = document.getElementById('sort-icon-desp-' + col);
+    if (!th || !icon) return;
+
+    if (col === field) {
+      th.classList.add('active-sort');
+      if (col === 'data') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-wide-short text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Data: Mais novas no topo (Clique para inverter)' 
+          : 'Data: Mais antigas no topo (Clique para inverter)';
+      } else if (['categoria', 'descricao', 'formaPagamento'].includes(col)) {
+        icon.className = direction === 'asc' 
+          ? 'fa-solid fa-arrow-down-a-z text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-z-a text-[#C5A059] text-[11px]';
+        th.title = direction === 'asc' 
+          ? 'Ordem alfabética (A-Z) (Clique para Z-A)' 
+          : 'Ordem alfabética (Z-A) (Clique para A-Z)';
+      } else if (col === 'valor') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-9-1 text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-1-9 text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Maior valor no topo (Clique para menor)' 
+          : 'Menor valor no topo (Clique para maior)';
+      }
+    } else {
+      th.classList.remove('active-sort');
+      icon.className = 'fa-solid fa-sort text-gray-300 text-[11px]';
+    }
+  });
+
+  // Pílulas
+  const pillRecentes = document.getElementById('pill-desp-recentes');
+  const pillAntigas = document.getElementById('pill-desp-antigas');
+  const pillMaiorValor = document.getElementById('pill-desp-maior_valor');
+  const pillCategoria = document.getElementById('pill-desp-categoria');
+  const pillDescricao = document.getElementById('pill-desp-descricao');
+
+  if (pillRecentes) pillRecentes.classList.toggle('active', field === 'data' && direction === 'desc' && (!state.filters.despesasCat || state.filters.despesasCat === 'all'));
+  if (pillAntigas) pillAntigas.classList.toggle('active', field === 'data' && direction === 'asc');
+  if (pillMaiorValor) pillMaiorValor.classList.toggle('active', field === 'valor' && direction === 'desc');
+  if (pillCategoria) pillCategoria.classList.toggle('active', field === 'categoria' && direction === 'asc');
+  if (pillDescricao) pillDescricao.classList.toggle('active', field === 'descricao' && direction === 'asc');
+
+  // Indicador
+  const indicator = document.getElementById('active-sort-indicator-desp');
+  if (indicator) {
+    let descr = '';
+    if (field === 'data') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-wide-short"></i> Mais novas primeiro' : '<i class="fa-solid fa-arrow-up-wide-short"></i> Mais antigas primeiro';
+    else if (field === 'categoria') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Categoria (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Categoria (Z → A)';
+    else if (field === 'descricao') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Descrição (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Descrição (Z → A)';
+    else if (field === 'valor') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maior Valor' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menor Valor';
+    else if (field === 'formaPagamento') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Pagamento (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Pagamento (Z → A)';
+    indicator.innerHTML = descr;
+  }
+
+  // Botão reset
+  const btnReset = document.getElementById('btn-reset-filters-desp');
+  if (btnReset) {
+    const isFiltered = Boolean(state.filters.despesasSearch) || 
+                       (state.filters.despesasCat && state.filters.despesasCat !== 'all') || 
+                       (field !== 'data' || direction !== 'desc');
+    if (isFiltered) {
+      btnReset.classList.add('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.remove('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Limpar Filtros';
+    } else {
+      btnReset.classList.remove('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.add('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão';
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------
+// ORDENAÇÃO E FILTROS RÁPIDOS: RECEITAS AVULSAS & PRODUTOS (PJ)
+// ------------------------------------------------------------------------------
+function toggleSortOutros(field) {
+  if (!state.sort) state.sort = {};
+  if (!state.sort.outros) {
+    state.sort.outros = { field: 'data', direction: 'desc' };
+  }
+
+  const current = state.sort.outros;
+  if (current.field === field) {
+    current.direction = current.direction === 'desc' ? 'asc' : 'desc';
+  } else {
+    current.field = field;
+    if (['descricao', 'observacoes'].includes(field)) {
+      current.direction = 'asc';
+    } else {
+      current.direction = 'desc';
+    }
+  }
+
+  renderOutrosTable();
+}
+
+function applyQuickFilterOutros(filterKey) {
+  if (!state.sort) state.sort = {};
+  if (!state.filters) state.filters = {};
+
+  if (filterKey === 'recentes') {
+    state.sort.outros = { field: 'data', direction: 'desc' };
+  } else if (filterKey === 'antigas') {
+    state.sort.outros = { field: 'data', direction: 'asc' };
+  } else if (filterKey === 'maior_valor') {
+    state.sort.outros = { field: 'valor', direction: 'desc' };
+  } else if (filterKey === 'descricao') {
+    state.sort.outros = { field: 'descricao', direction: 'asc' };
+  }
+
+  renderOutrosTable();
+}
+
+function resetOutrosFilters() {
+  if (!state.filters) state.filters = {};
+  state.filters.outrosSearch = '';
+
+  const searchInput = document.getElementById('search-outros');
+  if (searchInput) searchInput.value = '';
+
+  if (!state.sort) state.sort = {};
+  state.sort.outros = { field: 'data', direction: 'desc' };
+
+  renderOutrosTable();
+  showToast('Ordem padrão de Receitas Extras restaurada (Mais novas primeiro)!');
+}
+
+function updateSortHeadersOutrosUI() {
+  const sortCfg = state.sort?.outros || { field: 'data', direction: 'desc' };
+  const field = sortCfg.field;
+  const direction = sortCfg.direction;
+
+  const columns = ['data', 'descricao', 'valor', 'observacoes'];
+
+  columns.forEach(col => {
+    const th = document.getElementById('th-sort-outros-' + col);
+    const icon = document.getElementById('sort-icon-outros-' + col);
+    if (!th || !icon) return;
+
+    if (col === field) {
+      th.classList.add('active-sort');
+      if (col === 'data') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-wide-short text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Data: Mais novas no topo (Clique para inverter)' 
+          : 'Data: Mais antigas no topo (Clique para inverter)';
+      } else if (['descricao', 'observacoes'].includes(col)) {
+        icon.className = direction === 'asc' 
+          ? 'fa-solid fa-arrow-down-a-z text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-z-a text-[#C5A059] text-[11px]';
+        th.title = direction === 'asc' 
+          ? 'Ordem alfabética (A-Z) (Clique para Z-A)' 
+          : 'Ordem alfabética (Z-A) (Clique para A-Z)';
+      } else if (col === 'valor') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-9-1 text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-1-9 text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Maior valor no topo (Clique para menor)' 
+          : 'Menor valor no topo (Clique para maior)';
+      }
+    } else {
+      th.classList.remove('active-sort');
+      icon.className = 'fa-solid fa-sort text-gray-300 text-[11px]';
+    }
+  });
+
+  // Pílulas
+  const pillRecentes = document.getElementById('pill-outros-recentes');
+  const pillAntigas = document.getElementById('pill-outros-antigas');
+  const pillMaiorValor = document.getElementById('pill-outros-maior_valor');
+  const pillDescricao = document.getElementById('pill-outros-descricao');
+
+  if (pillRecentes) pillRecentes.classList.toggle('active', field === 'data' && direction === 'desc');
+  if (pillAntigas) pillAntigas.classList.toggle('active', field === 'data' && direction === 'asc');
+  if (pillMaiorValor) pillMaiorValor.classList.toggle('active', field === 'valor' && direction === 'desc');
+  if (pillDescricao) pillDescricao.classList.toggle('active', field === 'descricao' && direction === 'asc');
+
+  // Indicador
+  const indicator = document.getElementById('active-sort-indicator-outros');
+  if (indicator) {
+    let descr = '';
+    if (field === 'data') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-wide-short"></i> Mais novas primeiro' : '<i class="fa-solid fa-arrow-up-wide-short"></i> Mais antigas primeiro';
+    else if (field === 'descricao') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Descrição (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Descrição (Z → A)';
+    else if (field === 'valor') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maior Valor' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menor Valor';
+    else if (field === 'observacoes') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Observações (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Observações (Z → A)';
+    indicator.innerHTML = descr;
+  }
+
+  // Botão reset
+  const btnReset = document.getElementById('btn-reset-filters-outros');
+  if (btnReset) {
+    const isFiltered = Boolean(state.filters.outrosSearch) || (field !== 'data' || direction !== 'desc');
+    if (isFiltered) {
+      btnReset.classList.add('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.remove('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Limpar Filtros';
+    } else {
+      btnReset.classList.remove('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.add('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão';
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------
+// ORDENAÇÃO E FILTROS RÁPIDOS: FINANÇAS PESSOAIS (PF)
+// ------------------------------------------------------------------------------
+function toggleSortPessoal(field) {
+  if (!state.sort) state.sort = {};
+  if (!state.sort.pessoal) {
+    state.sort.pessoal = { field: 'data', direction: 'desc' };
+  }
+
+  const current = state.sort.pessoal;
+  if (current.field === field) {
+    current.direction = current.direction === 'desc' ? 'asc' : 'desc';
+  } else {
+    current.field = field;
+    if (['tipo', 'categoria', 'descricao'].includes(field)) {
+      current.direction = 'asc';
+    } else {
+      current.direction = 'desc';
+    }
+  }
+
+  renderPessoalTable();
+}
+
+function applyQuickFilterPessoal(filterKey) {
+  if (!state.sort) state.sort = {};
+  if (!state.filters) state.filters = {};
+
+  if (filterKey === 'recentes') {
+    state.sort.pessoal = { field: 'data', direction: 'desc' };
+    state.filters.pessoalTipo = 'all';
+    const sel = document.getElementById('filter-tipo-pessoal');
+    if (sel) sel.value = 'all';
+  } else if (filterKey === 'antigas') {
+    state.sort.pessoal = { field: 'data', direction: 'asc' };
+  } else if (filterKey === 'entradas') {
+    state.filters.pessoalTipo = state.filters.pessoalTipo === 'receita' ? 'all' : 'receita';
+    const sel = document.getElementById('filter-tipo-pessoal');
+    if (sel) sel.value = state.filters.pessoalTipo;
+  } else if (filterKey === 'gastos') {
+    state.filters.pessoalTipo = state.filters.pessoalTipo === 'despesa' ? 'all' : 'despesa';
+    const sel = document.getElementById('filter-tipo-pessoal');
+    if (sel) sel.value = state.filters.pessoalTipo;
+  } else if (filterKey === 'maior_valor') {
+    state.sort.pessoal = { field: 'valor', direction: 'desc' };
+  } else if (filterKey === 'categoria') {
+    state.sort.pessoal = { field: 'categoria', direction: 'asc' };
+  }
+
+  renderPessoalTable();
+}
+
+function resetPessoalFilters() {
+  if (!state.filters) state.filters = {};
+  state.filters.pessoalSearch = '';
+  state.filters.pessoalTipo = 'all';
+
+  const searchInput = document.getElementById('search-pessoal');
+  if (searchInput) searchInput.value = '';
+
+  const filterTipo = document.getElementById('filter-tipo-pessoal');
+  if (filterTipo) filterTipo.value = 'all';
+
+  if (!state.sort) state.sort = {};
+  state.sort.pessoal = { field: 'data', direction: 'desc' };
+
+  renderPessoalTable();
+  showToast('Ordem padrão de Finanças Pessoais restaurada (Mais novos primeiro)!');
+}
+
+function updateSortHeadersPessoalUI() {
+  const sortCfg = state.sort?.pessoal || { field: 'data', direction: 'desc' };
+  const field = sortCfg.field;
+  const direction = sortCfg.direction;
+
+  const columns = ['data', 'tipo', 'categoria', 'descricao', 'valor'];
+
+  columns.forEach(col => {
+    const th = document.getElementById('th-sort-pess-' + col);
+    const icon = document.getElementById('sort-icon-pess-' + col);
+    if (!th || !icon) return;
+
+    if (col === field) {
+      th.classList.add('active-sort');
+      if (col === 'data') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-wide-short text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Data: Mais novos no topo (Clique para inverter)' 
+          : 'Data: Mais antigos no topo (Clique para inverter)';
+      } else if (['tipo', 'categoria', 'descricao'].includes(col)) {
+        icon.className = direction === 'asc' 
+          ? 'fa-solid fa-arrow-down-a-z text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-z-a text-[#C5A059] text-[11px]';
+        th.title = direction === 'asc' 
+          ? 'Ordem alfabética (A-Z) (Clique para Z-A)' 
+          : 'Ordem alfabética (Z-A) (Clique para A-Z)';
+      } else if (col === 'valor') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-9-1 text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-1-9 text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Maior valor no topo (Clique para menor)' 
+          : 'Menor valor no topo (Clique para maior)';
+      }
+    } else {
+      th.classList.remove('active-sort');
+      icon.className = 'fa-solid fa-sort text-gray-300 text-[11px]';
+    }
+  });
+
+  // Pílulas
+  const pillRecentes = document.getElementById('pill-pess-recentes');
+  const pillAntigas = document.getElementById('pill-pess-antigas');
+  const pillEntradas = document.getElementById('pill-pess-entradas');
+  const pillGastos = document.getElementById('pill-pess-gastos');
+  const pillMaiorValor = document.getElementById('pill-pess-maior_valor');
+  const pillCategoria = document.getElementById('pill-pess-categoria');
+
+  if (pillRecentes) pillRecentes.classList.toggle('active', field === 'data' && direction === 'desc' && (!state.filters.pessoalTipo || state.filters.pessoalTipo === 'all'));
+  if (pillAntigas) pillAntigas.classList.toggle('active', field === 'data' && direction === 'asc');
+  if (pillEntradas) pillEntradas.classList.toggle('active', state.filters.pessoalTipo === 'receita');
+  if (pillGastos) pillGastos.classList.toggle('active', state.filters.pessoalTipo === 'despesa');
+  if (pillMaiorValor) pillMaiorValor.classList.toggle('active', field === 'valor' && direction === 'desc');
+  if (pillCategoria) pillCategoria.classList.toggle('active', field === 'categoria' && direction === 'asc');
+
+  // Indicador
+  const indicator = document.getElementById('active-sort-indicator-pess');
+  if (indicator) {
+    let descr = '';
+    if (field === 'data') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-wide-short"></i> Mais novos primeiro' : '<i class="fa-solid fa-arrow-up-wide-short"></i> Mais antigas primeiro';
+    else if (field === 'tipo') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Tipo (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Tipo (Z → A)';
+    else if (field === 'categoria') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Categoria (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Categoria (Z → A)';
+    else if (field === 'descricao') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Descrição (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Descrição (Z → A)';
+    else if (field === 'valor') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maior Valor' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menor Valor';
+    indicator.innerHTML = descr;
+  }
+
+  // Botão reset
+  const btnReset = document.getElementById('btn-reset-filters-pess');
+  if (btnReset) {
+    const isFiltered = Boolean(state.filters.pessoalSearch) || 
+                       (state.filters.pessoalTipo && state.filters.pessoalTipo !== 'all') || 
+                       (field !== 'data' || direction !== 'desc');
+    if (isFiltered) {
+      btnReset.classList.add('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.remove('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Limpar Filtros';
+    } else {
+      btnReset.classList.remove('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.add('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão';
+    }
+  }
+}
+
+// ==============================================================================
+// MELHORIAS DE USABILIDADE: LINHAS CLICÁVEIS, SELEÇÃO E EXCLUSÃO EM MASSA
+// ==============================================================================
+
+/**
+ * Abre a edição correspondente quando o usuário clica em qualquer lugar da linha ou card.
+ * Ignora se o clique foi em botões, checkboxes, selects ou links.
+ */
+function handleRowClick(event, tab, itemKey) {
+  if (event && event.target && event.target.closest('button, input, select, label, a, .no-row-click')) {
+    return;
+  }
+  if (tab === 'atendimentos') {
+    openEditAtendimento(itemKey);
+  } else if (tab === 'despesas') {
+    openEditDespesa(itemKey);
+  } else if (tab === 'outros') {
+    openEditReceitaExtra(itemKey);
+  } else if (tab === 'pessoal') {
+    openEditPessoal(itemKey);
+  }
+}
+
+/**
+ * Alterna a seleção de um item individual (checkbox)
+ */
+function toggleSelectItem(tab, itemKey, event) {
+  if (event) event.stopPropagation();
+  if (!state.selectedItems[tab]) state.selectedItems[tab] = new Set();
+  
+  const keyStr = String(itemKey);
+  if (state.selectedItems[tab].has(keyStr)) {
+    state.selectedItems[tab].delete(keyStr);
+  } else {
+    state.selectedItems[tab].add(keyStr);
+  }
+
+  // Re-renderiza a tabela da aba para atualizar os destaques visuais e contadores
+  if (tab === 'atendimentos') renderAtendimentosTable();
+  else if (tab === 'despesas') renderDespesasTable();
+  else if (tab === 'outros') renderOutrosTable();
+  else if (tab === 'pessoal') renderPessoalTable();
+
+  updateBulkActionBar();
+}
+
+/**
+ * Retorna os itens atualmente filtrados/visíveis da aba especificada
+ */
+function getVisibleItemsForTab(tab) {
+  if (tab === 'atendimentos') {
+    let list = filterByPeriod(state.data.atendimentos || []);
+    if (state.filters.search) {
+      list = list.filter(a => {
+        const cliente = (a.cliente || '').toLowerCase();
+        const servico = (a.servico || '').toLowerCase();
+        return cliente.includes(state.filters.search) || servico.includes(state.filters.search);
+      });
+    }
+    if (state.filters.status !== 'all') {
+      list = list.filter(a => (a.situacao || '').toLowerCase() === state.filters.status.toLowerCase());
+    }
+    if (state.filters.payment !== 'all') {
+      list = list.filter(a => (a.formaPagamento || '').toLowerCase().includes(state.filters.payment.toLowerCase()));
+    }
+    const sortCfg = state.sort?.atendimentos || { field: 'data', direction: 'desc' };
+    return sortItemList(list, sortCfg.field, sortCfg.direction);
+  } else if (tab === 'despesas') {
+    let list = filterByPeriod(state.data.despesas || []);
+    if (state.filters.despesasSearch) {
+      const q = state.filters.despesasSearch.toLowerCase();
+      list = list.filter(d => (d.descricao || '').toLowerCase().includes(q) || (d.categoria || '').toLowerCase().includes(q) || (d.observacoes || '').toLowerCase().includes(q));
+    }
+    if (state.filters.despesasCat && state.filters.despesasCat !== 'all') {
+      list = list.filter(d => (d.categoria || '').toLowerCase() === state.filters.despesasCat.toLowerCase());
+    }
+    const sortCfg = state.sort?.despesas || { field: 'data', direction: 'desc' };
+    return sortItemList(list, sortCfg.field, sortCfg.direction);
+  } else if (tab === 'outros') {
+    let list = filterByPeriod(state.data.outros || []);
+    if (state.filters.outrosSearch) {
+      const q = state.filters.outrosSearch.toLowerCase();
+      list = list.filter(o => (o.descricao || '').toLowerCase().includes(q) || (o.observacoes || '').toLowerCase().includes(q));
+    }
+    const sortCfg = state.sort?.outros || { field: 'data', direction: 'desc' };
+    return sortItemList(list, sortCfg.field, sortCfg.direction);
+  } else if (tab === 'pessoal') {
+    let list = filterByPeriod(state.data.pessoal || []);
+    if (state.filters.pessoalSearch) {
+      const q = state.filters.pessoalSearch.toLowerCase();
+      list = list.filter(p => (p.descricao || '').toLowerCase().includes(q) || (p.categoria || '').toLowerCase().includes(q) || (p.observacoes || '').toLowerCase().includes(q));
+    }
+    if (state.filters.pessoalTipo && state.filters.pessoalTipo !== 'all') {
+      list = list.filter(p => (p.tipo || '').toLowerCase() === state.filters.pessoalTipo.toLowerCase());
+    }
+    const sortCfg = state.sort?.pessoal || { field: 'data', direction: 'desc' };
+    return sortItemList(list, sortCfg.field, sortCfg.direction);
+  }
+  return [];
+}
+
+/**
+ * Seleciona ou desseleciona todos os itens visíveis na aba atual
+ */
+function toggleSelectAll(tab, event) {
+  if (event) event.stopPropagation();
+  if (!state.selectedItems[tab]) state.selectedItems[tab] = new Set();
+
+  const visible = getVisibleItemsForTab(tab);
+  if (visible.length === 0) return;
+
+  const allVisibleSelected = visible.every((item, idx) => {
+    const key = String(item._id || item.id || item._rowIndex || idx);
+    return state.selectedItems[tab].has(key);
+  });
+
+  if (allVisibleSelected) {
+    // Desmarca todos os visíveis
+    visible.forEach((item, idx) => {
+      const key = String(item._id || item.id || item._rowIndex || idx);
+      state.selectedItems[tab].delete(key);
+    });
+  } else {
+    // Marca todos os visíveis
+    visible.forEach((item, idx) => {
+      const key = String(item._id || item.id || item._rowIndex || idx);
+      state.selectedItems[tab].add(key);
+    });
+  }
+
+  if (tab === 'atendimentos') renderAtendimentosTable();
+  else if (tab === 'despesas') renderDespesasTable();
+  else if (tab === 'outros') renderOutrosTable();
+  else if (tab === 'pessoal') renderPessoalTable();
+
+  updateBulkActionBar();
+}
+
+/**
+ * Atualiza o checkbox "Selecionar Todos" no cabeçalho da tabela
+ */
+function updateSelectAllHeader(tab) {
+  const chkAll = document.getElementById(`chk-all-${tab}`);
+  if (!chkAll) return;
+
+  const visible = getVisibleItemsForTab(tab);
+  if (!visible || visible.length === 0) {
+    chkAll.checked = false;
+    chkAll.indeterminate = false;
+    return;
+  }
+
+  const selectedCount = visible.filter((item, idx) => {
+    const key = String(item._id || item.id || item._rowIndex || idx);
+    return state.selectedItems[tab]?.has(key);
+  }).length;
+
+  if (selectedCount === 0) {
+    chkAll.checked = false;
+    chkAll.indeterminate = false;
+  } else if (selectedCount === visible.length) {
+    chkAll.checked = true;
+    chkAll.indeterminate = false;
+  } else {
+    chkAll.checked = false;
+    chkAll.indeterminate = true;
+  }
+}
+
+/**
+ * Desmarca todos os itens selecionados na aba atual
+ */
+function clearCurrentTabSelection() {
+  const tab = state.currentTab;
+  if (state.selectedItems[tab]) {
+    state.selectedItems[tab].clear();
+  }
+  if (tab === 'atendimentos') renderAtendimentosTable();
+  else if (tab === 'despesas') renderDespesasTable();
+  else if (tab === 'outros') renderOutrosTable();
+  else if (tab === 'pessoal') renderPessoalTable();
+
+  updateBulkActionBar();
+}
+
+/**
+ * Atualiza a visibilidade e o texto da barra flutuante de ações em massa
+ */
+function updateBulkActionBar() {
+  const bar = document.getElementById('bulk-action-bar');
+  if (!bar) return;
+
+  const validTabs = ['atendimentos', 'despesas', 'outros', 'pessoal'];
+  const tab = state.currentTab;
+
+  if (!validTabs.includes(tab)) {
+    bar.classList.add('hidden');
+    return;
+  }
+
+  const selectedSet = state.selectedItems[tab];
+  const count = selectedSet ? selectedSet.size : 0;
+
+  if (count === 0) {
+    bar.classList.add('hidden');
+    return;
+  }
+
+  bar.classList.remove('hidden');
+
+  const badgeEl = document.getElementById('bulk-selected-badge');
+  if (badgeEl) badgeEl.textContent = count;
+
+  const textEl = document.getElementById('bulk-selected-text');
+  if (textEl) {
+    let singular = 'item';
+    let plural = 'itens';
+    if (tab === 'atendimentos') {
+      singular = state.config?.terms?.operacaoSingular || 'atendimento';
+      plural = state.config?.terms?.operacaoPlural || 'atendimentos';
+    } else if (tab === 'despesas') {
+      singular = 'despesa';
+      plural = 'despesas';
+    } else if (tab === 'outros') {
+      singular = 'receita';
+      plural = 'receitas';
+    } else if (tab === 'pessoal') {
+      singular = 'lançamento';
+      plural = 'lançamentos';
+    }
+    const label = count === 1 ? singular.toLowerCase() : plural.toLowerCase();
+    textEl.textContent = `${count} ${label} ${count === 1 ? 'selecionado' : 'selecionados'}`;
+  }
+}
+
+/**
+ * Exclui em lote todos os itens selecionados na aba atual
+ */
+async function deleteBulkSelected() {
+  const tab = state.currentTab;
+  const validTabs = ['atendimentos', 'despesas', 'outros', 'pessoal'];
+  if (!validTabs.includes(tab)) return;
+
+  const selectedSet = state.selectedItems[tab];
+  if (!selectedSet || selectedSet.size === 0) return;
+
+  const count = selectedSet.size;
+  let termLabel = 'lançamentos';
+  if (tab === 'atendimentos') termLabel = (state.config?.terms?.operacaoPlural || 'atendimentos').toLowerCase();
+  else if (tab === 'despesas') termLabel = 'despesas';
+  else if (tab === 'outros') termLabel = 'receitas';
+  else if (tab === 'pessoal') termLabel = 'lançamentos pessoais';
+
+  const confirmMsg = count === 1
+    ? `Deseja realmente excluir o item selecionado? Esta ação não pode ser desfeita.`
+    : `Deseja realmente excluir os ${count} ${termLabel} selecionados em massa? Esta ação não pode ser desfeita.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  const selectedKeys = Array.from(selectedSet);
+  const list = state.data[tab] || [];
+  const removedItems = [];
+
+  state.data[tab] = list.filter((item, idx) => {
+    const key1 = String(item._id || '');
+    const key2 = String(item.id || '');
+    const key3 = String(item._rowIndex || '');
+    const key4 = String(idx);
+
+    const isMatch = selectedKeys.includes(key1) || 
+                    selectedKeys.includes(key2) || 
+                    selectedKeys.includes(key3) || 
+                    selectedKeys.includes(key4);
+    if (isMatch) {
+      removedItems.push(item);
+      return false; // remove
+    }
+    return true; // mantém
+  });
+
+  // Limpa a seleção da aba
+  state.selectedItems[tab].clear();
+  saveLocalCache();
+
+  // Se logado no Supabase, exclui da nuvem com .in('id', ids)
+  if (state.currentUser && state.supabaseClient) {
+    const idsToDelete = removedItems
+      .map(item => item._id || item.id)
+      .filter(id => id && (typeof id === 'string' && (id.length > 10 || isNaN(Number(id)))));
+
+    if (idsToDelete.length > 0) {
+      const tableMap = {
+        'atendimentos': 'atendimentos',
+        'despesas': 'despesas_empresa',
+        'outros': 'receitas_extras',
+        'pessoal': 'financas_pessoais'
+      };
+      const tbl = tableMap[tab];
+      if (tbl) {
+        state.supabaseClient.from(tbl).delete().in('id', idsToDelete).then(({ error }) => {
+          if (error) console.error('Erro ao excluir em massa no Supabase:', error);
+        });
+      }
+    }
+  }
+
+  showToast(`${count} ${count > 1 ? `${termLabel} excluídos` : `${termLabel} excluído`} com sucesso!`);
+  renderAll();
+  updateBulkActionBar();
+}
+
+/**
+ * Trata o clique no botão de deletar posicionado dentro do modal de edição
+ */
+function handleDeleteFromModal(sheetType) {
+  let inputId = '';
+  let modalId = '';
+  if (sheetType === 'Atendimentos') {
+    inputId = 'modal-atend-rowindex';
+    modalId = 'modal-novo-atendimento';
+  } else if (sheetType === 'Despesas') {
+    inputId = 'modal-desp-rowindex';
+    modalId = 'modal-nova-despesa';
+  } else if (sheetType === 'Outros') {
+    inputId = 'modal-extra-rowindex';
+    modalId = 'modal-nova-receita-extra';
+  } else if (sheetType === 'Pessoal') {
+    inputId = 'modal-pess-rowindex';
+    modalId = 'modal-novo-pessoal';
+  }
+
+  const rowIndex = document.getElementById(inputId)?.value;
+  if (!rowIndex) return;
+
+  const wasDeleted = deleteItem(sheetType, rowIndex);
+  if (wasDeleted !== false) {
+    closeModal(modalId);
+  }
+}
+
 // Renderiza a Tabela e os Cards Mobile de Atendimentos
 function renderAtendimentosTable() {
   const tbody = document.getElementById('tbody-atendimentos');
@@ -2185,8 +3026,10 @@ function renderAtendimentosTable() {
   updateSortHeadersUI();
 
   if (list.length === 0) {
-    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 font-light">Nenhum atendimento encontrado para o período ou filtro selecionado.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-gray-400 font-light">Nenhum atendimento encontrado para o período ou filtro selecionado.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhum atendimento encontrado para o período ou filtro selecionado.</div>`;
+    updateSelectAllHeader('atendimentos');
+    updateBulkActionBar();
     return;
   }
 
@@ -2200,10 +3043,14 @@ function renderAtendimentosTable() {
         ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
         : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
 
-      const itemKey = a._id || a._rowIndex || idx;
+      const itemKey = String(a._id || a.id || a._rowIndex || idx);
+      const isSelected = state.selectedItems.atendimentos ? state.selectedItems.atendimentos.has(itemKey) : false;
 
       return `
-        <tr class="transition-colors hover:bg-rose-50/20">
+        <tr class="row-clickable transition-colors ${isSelected ? 'row-selected' : ''}" onclick="handleRowClick(event, 'atendimentos', '${itemKey}')" title="Clique para editar este atendimento">
+          <td class="w-10 text-center no-row-click px-3 py-3" onclick="event.stopPropagation()">
+            <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('atendimentos', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar atendimento">
+          </td>
           <td class="font-medium text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
           <td class="font-semibold text-gray-800">${a.cliente}</td>
           <td class="text-gray-700 font-medium">${a.servico}</td>
@@ -2218,7 +3065,7 @@ function renderAtendimentosTable() {
             ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-[10px] text-gray-400 block mt-0.5">${a.parcelas}</span>` : ''}
           </td>
           <td class="whitespace-nowrap">${badgeStatus}</td>
-          <td class="text-right whitespace-nowrap">
+          <td class="text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditAtendimento('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
@@ -2241,14 +3088,20 @@ function renderAtendimentosTable() {
         ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
         : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
 
-      const itemKey = a._id || a._rowIndex || idx;
+      const itemKey = String(a._id || a.id || a._rowIndex || idx);
+      const isSelected = state.selectedItems.atendimentos ? state.selectedItems.atendimentos.has(itemKey) : false;
 
       return `
-        <div class="card-lux mobile-card p-4 space-y-3">
+        <div class="card-lux mobile-card card-clickable p-4 space-y-3 ${isSelected ? 'card-selected' : ''}" onclick="handleRowClick(event, 'atendimentos', '${itemKey}')" title="Toque para editar">
           <div class="flex items-start justify-between gap-2">
-            <div>
-              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
-              <h4 class="font-bold text-gray-900 text-sm mt-0.5 leading-snug">${a.cliente}</h4>
+            <div class="flex items-start gap-2.5">
+              <div class="pt-0.5 no-row-click" onclick="event.stopPropagation()">
+                <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('atendimentos', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar atendimento">
+              </div>
+              <div>
+                <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+                <h4 class="font-bold text-gray-900 text-sm mt-0.5 leading-snug">${a.cliente}</h4>
+              </div>
             </div>
             <div>${badgeStatus}</div>
           </div>
@@ -2282,7 +3135,7 @@ function renderAtendimentosTable() {
               <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">${a.formaPagamento}</span>
               ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-gray-400 ml-1">(${a.parcelas})</span>` : ''}
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 no-row-click" onclick="event.stopPropagation()">
               <button onclick="openEditAtendimento('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
                 <i class="fa-regular fa-pen-to-square"></i> Editar
               </button>
@@ -2295,6 +3148,9 @@ function renderAtendimentosTable() {
       `;
     }).join('');
   }
+
+  updateSelectAllHeader('atendimentos');
+  updateBulkActionBar();
 }
 
 // Renderiza a Tabela e os Cards Mobile de Despesas da Empresa
@@ -2303,12 +3159,14 @@ function renderDespesasTable() {
   const cards = document.getElementById('cards-despesas');
   if (!tbody && !cards) return;
 
-  let list = filterByPeriod(state.data.despesas || []);
-  list = sortItemList(list, 'data', 'desc');
+  updateSortHeadersDespesasUI();
+  let list = getVisibleItemsForTab('despesas');
 
   if (list.length === 0) {
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-light">Nenhuma despesa registrada para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma despesa registrada para este período.</div>`;
+    updateSelectAllHeader('despesas');
+    updateBulkActionBar();
     return;
   }
 
@@ -2316,16 +3174,20 @@ function renderDespesasTable() {
   if (tbody) {
     tbody.innerHTML = list.map((d, idx) => {
       const dataFmt = formatDateBR(d.data);
-      const itemKey = d._id || d._rowIndex || idx;
+      const itemKey = String(d._id || d.id || d._rowIndex || idx);
+      const isSelected = state.selectedItems.despesas ? state.selectedItems.despesas.has(itemKey) : false;
 
       return `
-        <tr class="hover:bg-rose-50/20 transition-colors">
+        <tr class="row-clickable transition-colors ${isSelected ? 'row-selected' : ''}" onclick="handleRowClick(event, 'despesas', '${itemKey}')" title="Clique para editar esta despesa">
+          <td class="w-10 text-center no-row-click px-3 py-3" onclick="event.stopPropagation()">
+            <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('despesas', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar despesa">
+          </td>
           <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
           <td><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700">${d.categoria}</span></td>
           <td class="text-gray-800 font-medium">${d.descricao}</td>
           <td class="font-bold text-rose-600">${formatBRL(d.valor)}</td>
           <td class="text-xs text-gray-600">${d.formaPagamento} ${d.parcelas && d.parcelas !== 'À vista' ? `(${d.parcelas})` : ''}</td>
-          <td class="text-right whitespace-nowrap">
+          <td class="text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditDespesa('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Despesa">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
@@ -2342,14 +3204,20 @@ function renderDespesasTable() {
   if (cards) {
     cards.innerHTML = list.map((d, idx) => {
       const dataFmt = formatDateBR(d.data);
-      const itemKey = d._id || d._rowIndex || idx;
+      const itemKey = String(d._id || d.id || d._rowIndex || idx);
+      const isSelected = state.selectedItems.despesas ? state.selectedItems.despesas.has(itemKey) : false;
 
       return `
-        <div class="card-lux mobile-card p-4 space-y-2.5">
+        <div class="card-lux mobile-card card-clickable p-4 space-y-2.5 ${isSelected ? 'card-selected' : ''}" onclick="handleRowClick(event, 'despesas', '${itemKey}')" title="Toque para editar">
           <div class="flex items-start justify-between gap-2">
-            <div>
-              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
-              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${d.descricao}</h4>
+            <div class="flex items-start gap-2.5">
+              <div class="pt-0.5 no-row-click" onclick="event.stopPropagation()">
+                <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('despesas', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar despesa">
+              </div>
+              <div>
+                <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+                <h4 class="font-bold text-gray-800 text-sm mt-0.5">${d.descricao}</h4>
+              </div>
             </div>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-700 whitespace-nowrap">${d.categoria}</span>
           </div>
@@ -2367,7 +3235,7 @@ function renderDespesasTable() {
 
           ${d.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5 italic">${d.observacoes}</p>` : ''}
 
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditDespesa('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
@@ -2379,6 +3247,9 @@ function renderDespesasTable() {
       `;
     }).join('');
   }
+
+  updateSelectAllHeader('despesas');
+  updateBulkActionBar();
 }
 
 // Renderiza a Tabela e os Cards Mobile de Receitas Extras / Avulsas
@@ -2387,12 +3258,14 @@ function renderOutrosTable() {
   const cards = document.getElementById('cards-outros');
   if (!tbody && !cards) return;
 
-  let list = filterByPeriod(state.data.outros || []);
-  list = sortItemList(list, 'data', 'desc');
+  updateSortHeadersOutrosUI();
+  let list = getVisibleItemsForTab('outros');
 
   if (list.length === 0) {
-    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 font-light">Nenhuma receita extra registrada para este período.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 font-light">Nenhuma receita extra registrada para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhuma receita extra registrada para este período.</div>`;
+    updateSelectAllHeader('outros');
+    updateBulkActionBar();
     return;
   }
 
@@ -2400,15 +3273,19 @@ function renderOutrosTable() {
   if (tbody) {
     tbody.innerHTML = list.map((o, idx) => {
       const dataFmt = formatDateBR(o.data);
-      const itemKey = o._id || o._rowIndex || idx;
+      const itemKey = String(o._id || o.id || o._rowIndex || idx);
+      const isSelected = state.selectedItems.outros ? state.selectedItems.outros.has(itemKey) : false;
 
       return `
-        <tr class="hover:bg-rose-50/20 transition-colors">
+        <tr class="row-clickable transition-colors ${isSelected ? 'row-selected' : ''}" onclick="handleRowClick(event, 'outros', '${itemKey}')" title="Clique para editar esta receita extra">
+          <td class="w-10 text-center no-row-click px-3 py-3" onclick="event.stopPropagation()">
+            <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('outros', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar receita">
+          </td>
           <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
           <td class="font-medium text-gray-800">${o.descricao}</td>
           <td class="font-bold text-emerald-600">${formatBRL(o.valor)}</td>
           <td class="text-xs text-gray-500">${o.observacoes}</td>
-          <td class="text-right whitespace-nowrap">
+          <td class="text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditReceitaExtra('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Receita Extra">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
@@ -2425,14 +3302,20 @@ function renderOutrosTable() {
   if (cards) {
     cards.innerHTML = list.map((o, idx) => {
       const dataFmt = formatDateBR(o.data);
-      const itemKey = o._id || o._rowIndex || idx;
+      const itemKey = String(o._id || o.id || o._rowIndex || idx);
+      const isSelected = state.selectedItems.outros ? state.selectedItems.outros.has(itemKey) : false;
 
       return `
-        <div class="card-lux mobile-card p-4 space-y-2.5">
+        <div class="card-lux mobile-card card-clickable p-4 space-y-2.5 ${isSelected ? 'card-selected' : ''}" onclick="handleRowClick(event, 'outros', '${itemKey}')" title="Toque para editar">
           <div class="flex items-start justify-between gap-2">
-            <div>
-              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
-              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${o.descricao}</h4>
+            <div class="flex items-start gap-2.5">
+              <div class="pt-0.5 no-row-click" onclick="event.stopPropagation()">
+                <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('outros', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar receita">
+              </div>
+              <div>
+                <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+                <h4 class="font-bold text-gray-800 text-sm mt-0.5">${o.descricao}</h4>
+              </div>
             </div>
             <div class="text-right">
               <span class="text-[10px] text-gray-400 uppercase font-semibold block">Valor Recebido</span>
@@ -2442,7 +3325,7 @@ function renderOutrosTable() {
 
           ${o.observacoes ? `<p class="text-xs text-gray-500 bg-stone-50 p-2 rounded-lg border border-black/5">${o.observacoes}</p>` : ''}
 
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditReceitaExtra('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
@@ -2454,6 +3337,9 @@ function renderOutrosTable() {
       `;
     }).join('');
   }
+
+  updateSelectAllHeader('outros');
+  updateBulkActionBar();
 }
 
 // Renderiza a Tabela e os Cards Mobile de Finanças Pessoais
@@ -2462,12 +3348,14 @@ function renderPessoalTable() {
   const cards = document.getElementById('cards-pessoal');
   if (!tbody && !cards) return;
 
-  let list = filterByPeriod(state.data.pessoal || []);
-  list = sortItemList(list, 'data', 'desc');
+  updateSortHeadersPessoalUI();
+  let list = getVisibleItemsForTab('pessoal');
 
   if (list.length === 0) {
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 font-light">Nenhum lançamento pessoal registrado para este período.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-light">Nenhum lançamento pessoal registrado para este período.</td></tr>`;
     if (cards) cards.innerHTML = `<div class="card-lux p-8 text-center text-gray-400 font-light text-sm">Nenhum lançamento pessoal registrado para este período.</div>`;
+    updateSelectAllHeader('pessoal');
+    updateBulkActionBar();
     return;
   }
 
@@ -2479,16 +3367,20 @@ function renderPessoalTable() {
       const badgeTipo = isReceita
         ? '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
         : '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
-      const itemKey = p._id || p._rowIndex || idx;
+      const itemKey = String(p._id || p.id || p._rowIndex || idx);
+      const isSelected = state.selectedItems.pessoal ? state.selectedItems.pessoal.has(itemKey) : false;
 
       return `
-        <tr class="hover:bg-rose-50/20 transition-colors">
+        <tr class="row-clickable transition-colors ${isSelected ? 'row-selected' : ''}" onclick="handleRowClick(event, 'pessoal', '${itemKey}')" title="Clique para editar este lançamento pessoal">
+          <td class="w-10 text-center no-row-click px-3 py-3" onclick="event.stopPropagation()">
+            <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('pessoal', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar lançamento">
+          </td>
           <td class="text-xs text-gray-500 whitespace-nowrap">${dataFmt}</td>
           <td>${badgeTipo}</td>
           <td><span class="text-xs font-medium text-gray-600">${p.categoria}</span></td>
           <td class="font-medium text-gray-800">${p.descricao}</td>
           <td class="font-bold ${isReceita ? 'text-emerald-600' : 'text-gray-800'}">${formatBRL(p.valor)}</td>
-          <td class="text-right whitespace-nowrap">
+          <td class="text-right whitespace-nowrap no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditPessoal('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Lançamento Pessoal">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
@@ -2509,15 +3401,21 @@ function renderPessoalTable() {
       const badgeTipo = isReceita
         ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">Entrada / Pró-labore</span>'
         : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-800">Gasto Pessoal</span>';
-      const itemKey = p._id || p._rowIndex || idx;
+      const itemKey = String(p._id || p.id || p._rowIndex || idx);
+      const isSelected = state.selectedItems.pessoal ? state.selectedItems.pessoal.has(itemKey) : false;
 
       return `
-        <div class="card-lux mobile-card p-4 space-y-2.5">
+        <div class="card-lux mobile-card card-clickable p-4 space-y-2.5 ${isSelected ? 'card-selected' : ''}" onclick="handleRowClick(event, 'pessoal', '${itemKey}')" title="Toque para editar">
           <div class="flex items-start justify-between gap-2">
-            <div>
-              <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
-              <h4 class="font-bold text-gray-800 text-sm mt-0.5">${p.descricao}</h4>
-              <span class="text-xs text-gray-500 font-medium">${p.categoria}</span>
+            <div class="flex items-start gap-2.5">
+              <div class="pt-0.5 no-row-click" onclick="event.stopPropagation()">
+                <input type="checkbox" data-id="${itemKey}" ${isSelected ? 'checked' : ''} onchange="toggleSelectItem('pessoal', '${itemKey}', event)" onclick="event.stopPropagation()" class="custom-checkbox cursor-pointer" title="Selecionar lançamento">
+              </div>
+              <div>
+                <span class="text-[11px] text-gray-400 font-medium block">${dataFmt}</span>
+                <h4 class="font-bold text-gray-800 text-sm mt-0.5">${p.descricao}</h4>
+                <span class="text-xs text-gray-500 font-medium">${p.categoria}</span>
+              </div>
             </div>
             <div class="text-right">
               ${badgeTipo}
@@ -2527,7 +3425,7 @@ function renderPessoalTable() {
 
           ${p.observacoes ? `<p class="text-xs text-gray-400 italic bg-stone-50 p-2 rounded-lg border border-black/5">${p.observacoes}</p>` : ''}
 
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5">
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-black/5 no-row-click" onclick="event.stopPropagation()">
             <button onclick="openEditPessoal('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
               <i class="fa-regular fa-pen-to-square"></i> Editar
             </button>
@@ -2539,6 +3437,9 @@ function renderPessoalTable() {
       `;
     }).join('');
   }
+
+  updateSelectAllHeader('pessoal');
+  updateBulkActionBar();
 }
 
 // Renderiza Metas e Planejamento
@@ -2762,6 +3663,7 @@ function openNewAtendimento() {
   document.getElementById('modal-atend-rowindex').value = '';
   document.getElementById('modal-atend-title').innerText = 'Novo Atendimento';
   document.getElementById('modal-atend-submit-btn').innerText = 'Salvar Atendimento';
+  document.getElementById('modal-atend-btn-delete')?.classList.add('hidden');
   
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('modal-data').value = today;
@@ -2782,6 +3684,7 @@ function openNewAtendimento() {
 function openEditAtendimento(keyOrIndex) {
   let item = (state.data.atendimentos || []).find(a => 
     (a._id && String(a._id) === String(keyOrIndex)) || 
+    (a.id && String(a.id) === String(keyOrIndex)) ||
     (a._rowIndex && String(a._rowIndex) === String(keyOrIndex))
   );
   if (!item) {
@@ -2792,9 +3695,10 @@ function openEditAtendimento(keyOrIndex) {
 
   populateProcedimentosSelect();
 
-  document.getElementById('modal-atend-rowindex').value = item._rowIndex;
+  document.getElementById('modal-atend-rowindex').value = item._rowIndex || item._id || item.id;
   document.getElementById('modal-atend-title').innerText = 'Editar Atendimento';
   document.getElementById('modal-atend-submit-btn').innerText = 'Salvar Alterações';
+  document.getElementById('modal-atend-btn-delete')?.classList.remove('hidden');
 
   document.getElementById('modal-data').value = item.data;
   document.getElementById('modal-cliente').value = item.cliente;
@@ -2925,6 +3829,7 @@ function openNewDespesa() {
   document.getElementById('modal-desp-rowindex').value = '';
   document.getElementById('modal-desp-title').innerText = 'Nova Despesa da Empresa';
   document.getElementById('modal-desp-submit-btn').innerText = 'Salvar Despesa';
+  document.getElementById('modal-desp-btn-delete')?.classList.add('hidden');
 
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('modal-desp-data').value = today;
@@ -2940,6 +3845,7 @@ function openNewDespesa() {
 function openEditDespesa(keyOrIndex) {
   let item = (state.data.despesas || []).find(d => 
     (d._id && String(d._id) === String(keyOrIndex)) || 
+    (d.id && String(d.id) === String(keyOrIndex)) ||
     (d._rowIndex && String(d._rowIndex) === String(keyOrIndex))
   );
   if (!item) {
@@ -2948,9 +3854,10 @@ function openEditDespesa(keyOrIndex) {
   }
   if (!item) return;
 
-  document.getElementById('modal-desp-rowindex').value = item._rowIndex;
+  document.getElementById('modal-desp-rowindex').value = item._rowIndex || item._id || item.id;
   document.getElementById('modal-desp-title').innerText = 'Editar Despesa';
   document.getElementById('modal-desp-submit-btn').innerText = 'Salvar Alterações';
+  document.getElementById('modal-desp-btn-delete')?.classList.remove('hidden');
 
   document.getElementById('modal-desp-data').value = item.data;
   document.getElementById('modal-desp-cat').value = item.categoria;
@@ -3057,6 +3964,7 @@ function openNewReceitaExtra() {
   document.getElementById('modal-extra-rowindex').value = '';
   document.getElementById('modal-extra-title').innerText = 'Nova Receita Extra';
   document.getElementById('modal-extra-submit-btn').innerText = 'Salvar Receita';
+  document.getElementById('modal-extra-btn-delete')?.classList.add('hidden');
 
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('modal-extra-data').value = today;
@@ -3069,6 +3977,7 @@ function openNewReceitaExtra() {
 function openEditReceitaExtra(keyOrIndex) {
   let item = (state.data.outros || []).find(o => 
     (o._id && String(o._id) === String(keyOrIndex)) || 
+    (o.id && String(o.id) === String(keyOrIndex)) || 
     (o._rowIndex && String(o._rowIndex) === String(keyOrIndex))
   );
   if (!item) {
@@ -3077,9 +3986,10 @@ function openEditReceitaExtra(keyOrIndex) {
   }
   if (!item) return;
 
-  document.getElementById('modal-extra-rowindex').value = item._rowIndex;
+  document.getElementById('modal-extra-rowindex').value = item._rowIndex || item._id || item.id;
   document.getElementById('modal-extra-title').innerText = 'Editar Receita Extra';
   document.getElementById('modal-extra-submit-btn').innerText = 'Salvar Alterações';
+  document.getElementById('modal-extra-btn-delete')?.classList.remove('hidden');
 
   document.getElementById('modal-extra-data').value = item.data;
   document.getElementById('modal-extra-desc').value = item.descricao;
@@ -3174,6 +4084,7 @@ function openNewPessoal() {
   document.getElementById('modal-pess-rowindex').value = '';
   document.getElementById('modal-pess-title').innerText = 'Lançamento Pessoal (PF)';
   document.getElementById('modal-pess-submit-btn').innerText = 'Salvar';
+  document.getElementById('modal-pess-btn-delete')?.classList.add('hidden');
 
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('modal-pess-data').value = today;
@@ -3188,6 +4099,7 @@ function openNewPessoal() {
 function openEditPessoal(keyOrIndex) {
   let item = (state.data.pessoal || []).find(p => 
     (p._id && String(p._id) === String(keyOrIndex)) || 
+    (p.id && String(p.id) === String(keyOrIndex)) || 
     (p._rowIndex && String(p._rowIndex) === String(keyOrIndex))
   );
   if (!item) {
@@ -3196,9 +4108,10 @@ function openEditPessoal(keyOrIndex) {
   }
   if (!item) return;
 
-  document.getElementById('modal-pess-rowindex').value = item._rowIndex;
+  document.getElementById('modal-pess-rowindex').value = item._rowIndex || item._id || item.id;
   document.getElementById('modal-pess-title').innerText = 'Editar Lançamento Pessoal';
   document.getElementById('modal-pess-submit-btn').innerText = 'Salvar Alterações';
+  document.getElementById('modal-pess-btn-delete')?.classList.remove('hidden');
 
   document.getElementById('modal-pess-data').value = item.data;
   document.getElementById('modal-pess-tipo').value = item.tipo;
@@ -3383,19 +4296,34 @@ function submitMetas(event) {
 
 // Exclusão de Item
 function deleteItem(sheetType, rowIndex) {
-  if (!confirm(`Deseja realmente excluir este lançamento?`)) return;
+  if (!confirm(`Deseja realmente excluir este lançamento?`)) return false;
 
   const key = sheetType.toLowerCase();
   let list = state.data[key] || [];
   
-  const targetIndex = list.findIndex((item, idx) => (item._rowIndex || item._id || idx) === rowIndex || item._id === rowIndex || String(item._rowIndex) === String(rowIndex));
+  const targetIndex = list.findIndex((item, idx) => 
+    (item._rowIndex && String(item._rowIndex) === String(rowIndex)) || 
+    (item._id && String(item._id) === String(rowIndex)) || 
+    (item.id && String(item.id) === String(rowIndex)) || 
+    String(idx) === String(rowIndex)
+  );
+
   if (targetIndex !== -1) {
     const removedItem = list[targetIndex];
     list.splice(targetIndex, 1);
+
+    // Remove do Set de selecionados se estiver lá
+    if (state.selectedItems[key]) {
+      state.selectedItems[key].delete(String(removedItem._id || removedItem.id || removedItem._rowIndex || targetIndex));
+      state.selectedItems[key].delete(String(rowIndex));
+    }
+
     saveLocalCache();
     renderAll();
+    updateBulkActionBar();
+
     if (state.currentUser) {
-      showToast('Item excluído!');
+      showToast('Item excluído com sucesso!');
     } else {
       showToast('Item removido localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
       revealDemoBanner();
@@ -3411,7 +4339,7 @@ function deleteItem(sheetType, rowIndex) {
         'pessoal': 'financas_pessoais'
       };
       const tbl = tableMap[key];
-      if (tbl) {
+      if (tbl && (typeof idToDelete === 'string' && (idToDelete.length > 10 || isNaN(Number(idToDelete))))) {
         state.supabaseClient.from(tbl).delete().eq('id', idToDelete).then(({ error }) => {
           if (error) console.error('Erro ao excluir do Supabase:', error);
         });
@@ -3419,7 +4347,9 @@ function deleteItem(sheetType, rowIndex) {
     } else if (state.apiUrl) {
       callGasApi(`delete${sheetType}`, { rowIndex: rowIndex });
     }
+    return true;
   }
+  return false;
 }
 
 // ==============================================================================

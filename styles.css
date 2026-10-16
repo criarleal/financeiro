@@ -323,3 +323,105 @@ h1, h2, h3, h4, .serif {
 header {
   padding-top: max(0.875rem, env(safe-area-inset-top));
 }
+
+/* ==========================================================================
+   MELHORIAS DE VIDA: LINHAS CLICÁVEIS, EDIÇÃO E SELEÇÃO EM MASSA
+   ========================================================================== */
+
+/* Linha da Tabela Clicável */
+.row-clickable {
+  cursor: pointer;
+  user-select: text;
+  transition: background-color 0.15s ease;
+}
+
+.row-clickable:hover td {
+  background-color: rgba(212, 136, 140, 0.08) !important;
+}
+
+/* Linha Selecionada */
+.row-selected td {
+  background-color: rgba(212, 136, 140, 0.14) !important;
+}
+
+/* Card Mobile Clicável */
+.card-clickable {
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.card-clickable:hover {
+  border-color: rgba(212, 136, 140, 0.45);
+  box-shadow: 0 10px 25px rgba(212, 136, 140, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Card Mobile Selecionado */
+.card-selected {
+  border-color: var(--rose-logo) !important;
+  background-color: rgba(212, 136, 140, 0.05) !important;
+  box-shadow: 0 0 0 2px rgba(212, 136, 140, 0.35) !important;
+}
+
+/* Checkbox Customizado Estilo Luxo */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 0.375rem;
+  background-color: #FFFFFF;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+}
+
+.custom-checkbox:hover {
+  border-color: var(--rose-logo);
+}
+
+.custom-checkbox:checked {
+  background-color: var(--rose-logo);
+  border-color: var(--rose-logo);
+}
+
+.custom-checkbox:checked::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.35rem;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.custom-checkbox:indeterminate {
+  background-color: var(--rose-logo);
+  border-color: var(--rose-logo);
+}
+
+.custom-checkbox:indeterminate::before {
+  content: "";
+  width: 0.55rem;
+  height: 2px;
+  background-color: white;
+}
+
+/* Animação Slide Up para a Barra de Ações em Massa */
+@keyframes bulkSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 25px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: bulkSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
