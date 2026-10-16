@@ -240,6 +240,56 @@ h1, h2, h3, h4, .serif {
   background-color: rgba(212, 136, 140, 0.03);
 }
 
+/* Cabeçalhos da Tabela com Filtro/Ordenação Rápida */
+.lux-table th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.lux-table th.sortable-th:hover {
+  background-color: rgba(212, 136, 140, 0.08);
+  color: var(--text-primary);
+}
+
+.lux-table th.sortable-th.active-sort {
+  color: var(--gold-accent) !important;
+  background-color: rgba(197, 160, 89, 0.1);
+  font-weight: 700;
+}
+
+.lux-table th.sortable-th.active-sort i {
+  color: var(--gold-accent) !important;
+}
+
+/* Pílulas de Filtros Rápidos (Submenu de Acesso Ágil) */
+.quick-pill {
+  background-color: #FFFFFF;
+  color: #6B6661;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  cursor: pointer;
+  user-select: none;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.quick-pill:hover {
+  background-color: #F8F5EE;
+  border-color: rgba(197, 160, 89, 0.5);
+  color: #2B2A29;
+}
+
+.quick-pill.active {
+  background-color: #2B2A29 !important;
+  color: #FFFFFF !important;
+  border-color: #2B2A29 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.quick-pill.active i {
+  color: #E2C07D !important;
+}
+
 /* ==========================================================================
    UTILITÁRIOS E AJUSTES EXCLUSIVOS PARA MOBILE
    ========================================================================== */

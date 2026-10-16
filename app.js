@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth)
-const APP_VERSION = '1.3.2';
+// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth + Persistência de Abas)
+const APP_VERSION = '1.3.3';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -179,6 +179,12 @@ const state = {
     search: '',
     status: 'all',
     payment: 'all'
+  },
+  sort: {
+    atendimentos: { field: 'data', direction: 'desc' },
+    despesas: { field: 'data', direction: 'desc' },
+    outros: { field: 'data', direction: 'desc' },
+    pessoal: { field: 'data', direction: 'desc' }
   },
   config: null,
   supabaseUrl: localStorage.getItem('saas_supabase_url') || 'https://vvpmwpgvdcdutzlofnwx.supabase.co',
@@ -1396,6 +1402,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAll();
   applyModularUI();
 
+  // Restaura a aba ativa em que o usuário estava antes de atualizar a página
+  const initialTab = getInitialTab();
+  switchTab(initialTab);
+
   // Verifica se há sessão ativa no Supabase
   if (state.supabaseClient) {
     try {
@@ -1511,6 +1521,14 @@ function setupEventListeners() {
     });
   });
 
+  // Suporte à navegação pelo botão voltar/avançar ou alteração do hash da URL
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash ? window.location.hash.replace(/^#/, '').trim() : '';
+    if (hash && hash !== state.currentTab && isTabAvailable(hash)) {
+      switchTab(hash, false);
+    }
+  });
+
   // Filtros de Atendimentos
   document.getElementById('search-atendimentos')?.addEventListener('input', (e) => {
     state.filters.search = e.target.value.toLowerCase();
@@ -1565,9 +1583,67 @@ function setupEventListeners() {
   });
 }
 
+// Verifica se a aba solicitada é válida e se seu respectivo módulo está habilitado
+function isTabAvailable(tabId) {
+  if (!tabId) return false;
+  const section = document.getElementById(`tab-${tabId}`);
+  if (!section) return false;
+
+  const cfg = state.config || {};
+  if (tabId === 'atendimentos' && cfg.modules?.operacoes === false) return false;
+  if (tabId === 'despesas' && cfg.modules?.empresa === false) return false;
+  if (tabId === 'outros' && cfg.modules?.outros === false) return false;
+  if (tabId === 'pessoal' && cfg.modules?.pessoal === false) return false;
+  if (tabId === 'metas' && cfg.modules?.metas === false) return false;
+
+  return true;
+}
+
+// Obtém a aba inicial a partir do hash da URL ou do localStorage
+function getInitialTab() {
+  // 1. Tenta pegar da URL hash (#despesas, #atendimentos, etc.)
+  const hash = window.location.hash ? window.location.hash.replace(/^#/, '').trim() : '';
+  if (hash && isTabAvailable(hash)) {
+    return hash;
+  }
+
+  // 2. Tenta pegar do localStorage salvo de sessões anteriores
+  try {
+    const savedTab = localStorage.getItem('saas_fin_active_tab');
+    if (savedTab && isTabAvailable(savedTab)) {
+      return savedTab;
+    }
+  } catch (e) {
+    console.warn('Erro ao ler aba ativa do localStorage:', e);
+  }
+
+  return 'dashboard';
+}
+
 // Troca de Aba
-function switchTab(tabId) {
+function switchTab(tabId, updateUrl = true) {
+  if (!tabId || !document.getElementById(`tab-${tabId}`)) {
+    tabId = 'dashboard';
+  }
+
   state.currentTab = tabId;
+
+  // Persiste a aba no localStorage para que ao atualizar (F5) o usuário permaneça na mesma aba
+  try {
+    localStorage.setItem('saas_fin_active_tab', tabId);
+  } catch (e) {
+    console.warn('Erro ao salvar aba ativa no localStorage:', e);
+  }
+
+  // Atualiza a URL hash sem recarregar a página
+  if (updateUrl && window.location.hash !== `#${tabId}`) {
+    try {
+      history.replaceState(null, '', `#${tabId}`);
+    } catch (e) {
+      window.location.hash = tabId;
+    }
+  }
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.getAttribute('data-tab') === tabId) {
       btn.classList.add('active');
@@ -1790,6 +1866,234 @@ function setText(id, text) {
   if (el) el.innerText = text;
 }
 
+// ==============================================================================
+// SISTEMA DE ORDENAÇÃO E FILTROS RÁPIDOS
+// ==============================================================================
+
+function sortItemList(list, field, direction = 'desc') {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  const cloned = [...list];
+
+  return cloned.sort((a, b) => {
+    // 1. Ordenação por Data (Mais nova vs Mais antiga)
+    if (field === 'data') {
+      const pA = parseDateParts(a.data);
+      const pB = parseDateParts(b.data);
+      const tA = pA ? (pA.year * 10000 + pA.month * 100 + pA.day) : 0;
+      const tB = pB ? (pB.year * 10000 + pB.month * 100 + pB.day) : 0;
+      if (tA !== tB) {
+        return direction === 'asc' ? tA - tB : tB - tA;
+      }
+      // Desempate estável pela ordem de cadastro (_rowIndex ou ID numérico)
+      const rA = Number(a._rowIndex) || Number(a._id) || 0;
+      const rB = Number(b._rowIndex) || Number(b._id) || 0;
+      return direction === 'asc' ? rA - rB : rB - rA;
+    }
+
+    // 2. Ordenação por Valores Monetários ou Numéricos
+    if (['valorTotal', 'valor', 'recebido', 'aReceber', 'sinal', 'restante'].includes(field)) {
+      let vA = 0;
+      let vB = 0;
+      if (field === 'recebido') {
+        vA = parseFloat(a.recebido) || ((parseFloat(a.sinal) || 0) + (parseFloat(a.restante) || 0));
+        vB = parseFloat(b.recebido) || ((parseFloat(b.sinal) || 0) + (parseFloat(b.restante) || 0));
+      } else {
+        vA = parseFloat(a[field]) || 0;
+        vB = parseFloat(b[field]) || 0;
+      }
+      if (vA !== vB) {
+        return direction === 'asc' ? vA - vB : vB - vA;
+      }
+    }
+
+    // 3. Ordenação por Situação / Status (Pendente > Concluído > Cancelado)
+    if (field === 'situacao') {
+      const rank = { 'pendente': 1, 'concluído': 2, 'cancelado': 3 };
+      const rA = rank[(a.situacao || '').toLowerCase()] || 99;
+      const rB = rank[(b.situacao || '').toLowerCase()] || 99;
+      if (rA !== rB) {
+        return direction === 'asc' ? rA - rB : rB - rA;
+      }
+    }
+
+    // 4. Ordenação por Texto (Cliente, Procedimento, Pagamento, Categoria, Descrição, etc.)
+    const strA = String(a[field] || '').trim();
+    const strB = String(b[field] || '').trim();
+    const cmp = strA.localeCompare(strB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+    if (cmp !== 0) {
+      return direction === 'asc' ? cmp : -cmp;
+    }
+
+    // Desempate por data mais recente
+    const pA = parseDateParts(a.data);
+    const pB = parseDateParts(b.data);
+    const tA = pA ? (pA.year * 10000 + pA.month * 100 + pA.day) : 0;
+    const tB = pB ? (pB.year * 10000 + pB.month * 100 + pB.day) : 0;
+    return tB - tA;
+  });
+}
+
+function toggleSortAtendimentos(field) {
+  if (!state.sort) state.sort = {};
+  if (!state.sort.atendimentos) {
+    state.sort.atendimentos = { field: 'data', direction: 'desc' };
+  }
+
+  const current = state.sort.atendimentos;
+  if (current.field === field) {
+    current.direction = current.direction === 'desc' ? 'asc' : 'desc';
+  } else {
+    current.field = field;
+    if (['cliente', 'servico', 'formaPagamento', 'situacao'].includes(field)) {
+      current.direction = 'asc';
+    } else {
+      current.direction = 'desc';
+    }
+  }
+
+  renderAtendimentosTable();
+}
+
+function applyQuickFilter(filterKey) {
+  if (!state.sort) state.sort = {};
+  if (!state.filters) state.filters = { search: '', status: 'all', payment: 'all' };
+
+  if (filterKey === 'recentes') {
+    state.sort.atendimentos = { field: 'data', direction: 'desc' };
+  } else if (filterKey === 'antigos') {
+    state.sort.atendimentos = { field: 'data', direction: 'asc' };
+  } else if (filterKey === 'cliente_az') {
+    state.sort.atendimentos = { field: 'cliente', direction: 'asc' };
+  } else if (filterKey === 'pendentes') {
+    state.filters.status = state.filters.status === 'pendente' ? 'all' : 'pendente';
+    const sel = document.getElementById('filter-status');
+    if (sel) sel.value = state.filters.status;
+  } else if (filterKey === 'maior_valor') {
+    state.sort.atendimentos = { field: 'valorTotal', direction: 'desc' };
+  }
+
+  renderAtendimentosTable();
+}
+
+function resetAtendimentosFilters() {
+  if (!state.filters) state.filters = {};
+  state.filters.search = '';
+  state.filters.status = 'all';
+  state.filters.payment = 'all';
+
+  const searchInput = document.getElementById('search-atendimentos');
+  if (searchInput) searchInput.value = '';
+
+  const filterStatus = document.getElementById('filter-status');
+  if (filterStatus) filterStatus.value = 'all';
+
+  const filterPayment = document.getElementById('filter-payment');
+  if (filterPayment) filterPayment.value = 'all';
+
+  if (!state.sort) state.sort = {};
+  state.sort.atendimentos = { field: 'data', direction: 'desc' };
+
+  renderAtendimentosTable();
+  showToast('Ordem padrão restaurada (Mais novos primeiro)!');
+}
+
+function updateSortHeadersUI() {
+  const sortCfg = state.sort?.atendimentos || { field: 'data', direction: 'desc' };
+  const field = sortCfg.field;
+  const direction = sortCfg.direction;
+
+  const columns = ['data', 'cliente', 'servico', 'valorTotal', 'recebido', 'aReceber', 'formaPagamento', 'situacao'];
+
+  columns.forEach(col => {
+    const th = document.getElementById('th-sort-' + col);
+    const icon = document.getElementById('sort-icon-' + col);
+    if (!th || !icon) return;
+
+    if (col === field) {
+      th.classList.add('active-sort');
+      if (col === 'data') {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-wide-short text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Data: Mais novos no topo (Clique para inverter: mais antigos primeiro)' 
+          : 'Data: Mais antigos no topo (Clique para inverter: mais novos primeiro)';
+      } else if (['cliente', 'servico', 'formaPagamento'].includes(col)) {
+        icon.className = direction === 'asc' 
+          ? 'fa-solid fa-arrow-down-a-z text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-z-a text-[#C5A059] text-[11px]';
+        th.title = direction === 'asc' 
+          ? 'Ordem alfabética (A-Z) (Clique para Z-A)' 
+          : 'Ordem alfabética (Z-A) (Clique para A-Z)';
+      } else if (['valorTotal', 'recebido', 'aReceber'].includes(col)) {
+        icon.className = direction === 'desc' 
+          ? 'fa-solid fa-arrow-down-9-1 text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-1-9 text-[#C5A059] text-[11px]';
+        th.title = direction === 'desc' 
+          ? 'Maior valor no topo (Clique para menor)' 
+          : 'Menor valor no topo (Clique para maior)';
+      } else if (col === 'situacao') {
+        icon.className = direction === 'asc' 
+          ? 'fa-solid fa-arrow-down-short-wide text-[#C5A059] text-[11px]' 
+          : 'fa-solid fa-arrow-up-wide-short text-[#C5A059] text-[11px]';
+        th.title = direction === 'asc' 
+          ? 'Pendentes primeiro (Clique para inverter)' 
+          : 'Cancelados primeiro (Clique para inverter)';
+      }
+    } else {
+      th.classList.remove('active-sort');
+      icon.className = 'fa-solid fa-sort text-gray-300 text-[11px]';
+    }
+  });
+
+  // Atualiza as pílulas de filtros rápidos
+  const pillRecentes = document.getElementById('pill-recentes');
+  const pillAntigos = document.getElementById('pill-antigos');
+  const pillCliente = document.getElementById('pill-cliente_az');
+  const pillPendentes = document.getElementById('pill-pendentes');
+  const pillMaiorValor = document.getElementById('pill-maior_valor');
+
+  if (pillRecentes) pillRecentes.classList.toggle('active', field === 'data' && direction === 'desc' && state.filters.status === 'all');
+  if (pillAntigos) pillAntigos.classList.toggle('active', field === 'data' && direction === 'asc');
+  if (pillCliente) pillCliente.classList.toggle('active', field === 'cliente' && direction === 'asc');
+  if (pillPendentes) pillPendentes.classList.toggle('active', state.filters.status === 'pendente');
+  if (pillMaiorValor) pillMaiorValor.classList.toggle('active', field === 'valorTotal' && direction === 'desc');
+
+  // Atualiza texto indicador de ordenação ativa
+  const indicator = document.getElementById('active-sort-indicator');
+  if (indicator) {
+    let descr = '';
+    if (field === 'data') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-wide-short"></i> Mais novos primeiro' : '<i class="fa-solid fa-arrow-up-wide-short"></i> Mais antigos primeiro';
+    else if (field === 'cliente') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Cliente (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Cliente (Z → A)';
+    else if (field === 'servico') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Procedimento (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Procedimento (Z → A)';
+    else if (field === 'valorTotal') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maior Valor Total' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menor Valor Total';
+    else if (field === 'recebido') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maior Recebido' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menor Recebido';
+    else if (field === 'aReceber') descr = direction === 'desc' ? '<i class="fa-solid fa-arrow-down-9-1"></i> Maiores Pendências' : '<i class="fa-solid fa-arrow-up-1-9"></i> Menores Pendências';
+    else if (field === 'formaPagamento') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-a-z"></i> Pagamento (A → Z)' : '<i class="fa-solid fa-arrow-up-z-a"></i> Pagamento (Z → A)';
+    else if (field === 'situacao') descr = direction === 'asc' ? '<i class="fa-solid fa-arrow-down-short-wide"></i> Pendentes primeiro' : '<i class="fa-solid fa-arrow-up-wide-short"></i> Cancelados primeiro';
+
+    indicator.innerHTML = descr;
+  }
+
+  // Destaque no botão de reset se houver filtros ativos
+  const btnReset = document.getElementById('btn-reset-filters-atend');
+  if (btnReset) {
+    const isFiltered = (state.filters.search !== '') || 
+                       (state.filters.status !== 'all') || 
+                       (state.filters.payment !== 'all') || 
+                       (field !== 'data' || direction !== 'desc');
+    if (isFiltered) {
+      btnReset.classList.add('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.remove('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Limpar Filtros';
+    } else {
+      btnReset.classList.remove('border-amber-300', 'text-[#94712F]', 'bg-amber-50/60');
+      btnReset.classList.add('border-stone-200', 'text-stone-600', 'bg-stone-50');
+      btnReset.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão';
+    }
+  }
+}
+
 // Renderiza a Tabela e os Cards Mobile de Atendimentos
 function renderAtendimentosTable() {
   const tbody = document.getElementById('tbody-atendimentos');
@@ -1801,19 +2105,25 @@ function renderAtendimentosTable() {
   // Filtros de busca e selects
   if (state.filters.search) {
     list = list.filter(a => {
-      const cliente = a.cliente.toLowerCase();
-      const servico = a.servico.toLowerCase();
+      const cliente = (a.cliente || '').toLowerCase();
+      const servico = (a.servico || '').toLowerCase();
       return cliente.includes(state.filters.search) || servico.includes(state.filters.search);
     });
   }
 
   if (state.filters.status !== 'all') {
-    list = list.filter(a => a.situacao.toLowerCase() === state.filters.status.toLowerCase());
+    list = list.filter(a => (a.situacao || '').toLowerCase() === state.filters.status.toLowerCase());
   }
 
   if (state.filters.payment !== 'all') {
-    list = list.filter(a => a.formaPagamento.toLowerCase().includes(state.filters.payment.toLowerCase()));
+    list = list.filter(a => (a.formaPagamento || '').toLowerCase().includes(state.filters.payment.toLowerCase()));
   }
+
+  // Ordenação ativa (Padrão: Mais novos para os mais antigos)
+  const sortCfg = state.sort?.atendimentos || { field: 'data', direction: 'desc' };
+  list = sortItemList(list, sortCfg.field, sortCfg.direction);
+
+  updateSortHeadersUI();
 
   if (list.length === 0) {
     if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 font-light">Nenhum atendimento encontrado para o período ou filtro selecionado.</td></tr>`;
@@ -1830,6 +2140,8 @@ function renderAtendimentosTable() {
         : a.situacao === 'Pendente'
         ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
         : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
+
+      const itemKey = a._id || a._rowIndex || idx;
 
       return `
         <tr class="transition-colors hover:bg-rose-50/20">
@@ -1848,10 +2160,10 @@ function renderAtendimentosTable() {
           </td>
           <td class="whitespace-nowrap">${badgeStatus}</td>
           <td class="text-right whitespace-nowrap">
-            <button onclick="openEditAtendimento(${idx})" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
+            <button onclick="openEditAtendimento('${itemKey}')" class="text-gray-400 hover:text-[#C5A059] transition-colors p-1 mr-1.5" title="Editar Atendimento">
               <i class="fa-regular fa-pen-to-square"></i>
             </button>
-            <button onclick="deleteItem('Atendimentos', ${a._rowIndex || idx})" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
+            <button onclick="deleteItem('Atendimentos', '${itemKey}')" class="text-gray-400 hover:text-rose-500 transition-colors p-1" title="Excluir">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </td>
@@ -1869,6 +2181,8 @@ function renderAtendimentosTable() {
         : a.situacao === 'Pendente'
         ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Pendente</span>'
         : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Cancelado</span>';
+
+      const itemKey = a._id || a._rowIndex || idx;
 
       return `
         <div class="card-lux mobile-card p-4 space-y-3">
@@ -1910,10 +2224,10 @@ function renderAtendimentosTable() {
               ${a.parcelas && a.parcelas !== 'À vista' ? `<span class="text-gray-400 ml-1">(${a.parcelas})</span>` : ''}
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="openEditAtendimento(${idx})" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
+              <button onclick="openEditAtendimento('${itemKey}')" class="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-[#C5A059] font-semibold text-xs flex items-center gap-1.5 transition-colors">
                 <i class="fa-regular fa-pen-to-square"></i> Editar
               </button>
-              <button onclick="deleteItem('Atendimentos', ${a._rowIndex || idx})" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
+              <button onclick="deleteItem('Atendimentos', '${itemKey}')" class="p-1.5 text-gray-400 hover:text-rose-500 transition-colors" title="Excluir">
                 <i class="fa-regular fa-trash-can"></i>
               </button>
             </div>

@@ -416,37 +416,72 @@
         </button>
       </div>
 
-      <!-- Barra de Filtros e Busca -->
-      <div class="card-lux p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
-          <!-- Input Busca -->
-          <div class="relative flex-1 w-full">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
-            <input type="text" id="search-atendimentos" placeholder="Buscar por cliente ou serviço..." class="lux-input w-full pl-9 text-xs">
+      <!-- Barra de Filtros, Busca e Ações Rápidas -->
+      <div class="card-lux p-4 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 w-full">
+            <!-- Input Busca -->
+            <div class="relative flex-1 w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="text" id="search-atendimentos" placeholder="Buscar por cliente ou serviço..." class="lux-input w-full pl-9 text-xs">
+            </div>
+
+            <!-- Filtro Status e Forma de Pagamento em grid 2 colunas no celular -->
+            <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <select id="filter-status" class="lux-input text-xs cursor-pointer w-full">
+                <option value="all">Todos os Status</option>
+                <option value="concluído">Concluídos</option>
+                <option value="pendente">Pendentes (A Receber)</option>
+                <option value="cancelado">Cancelados</option>
+              </select>
+
+              <select id="filter-payment" class="lux-input text-xs cursor-pointer w-full">
+                <option value="all">Todas as Formas</option>
+                <option value="pix">Pix</option>
+                <option value="crédito">Crédito</option>
+                <option value="débito">Débito</option>
+                <option value="dinheiro">Dinheiro</option>
+              </select>
+            </div>
           </div>
 
-          <!-- Filtro Status e Forma de Pagamento em grid 2 colunas no celular -->
-          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <select id="filter-status" class="lux-input text-xs cursor-pointer w-full">
-              <option value="all">Todos os Status</option>
-              <option value="concluído">Concluídos</option>
-              <option value="pendente">Pendentes (A Receber)</option>
-              <option value="cancelado">Cancelados</option>
-            </select>
-
-            <select id="filter-payment" class="lux-input text-xs cursor-pointer w-full">
-              <option value="all">Todas as Formas</option>
-              <option value="pix">Pix</option>
-              <option value="crédito">Crédito</option>
-              <option value="débito">Débito</option>
-              <option value="dinheiro">Dinheiro</option>
-            </select>
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <button id="btn-reset-filters-atend" onclick="resetAtendimentosFilters()" class="px-3.5 py-2.5 rounded-xl border border-stone-200 hover:border-[#C5A059] hover:text-[#C5A059] bg-stone-50 hover:bg-stone-100 text-stone-600 text-xs font-semibold transition flex items-center justify-center gap-1.5 flex-1 md:flex-none whitespace-nowrap" title="Restaurar ordem padrão e limpar todos os filtros">
+              <i class="fa-solid fa-rotate-left text-xs"></i> Restaurar Padrão
+            </button>
+            <button onclick="exportDataCSV()" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition flex items-center justify-center gap-2 flex-1 md:flex-none whitespace-nowrap">
+              <i class="fa-solid fa-file-csv"></i> Baixar CSV
+            </button>
           </div>
         </div>
 
-        <button onclick="exportDataCSV()" class="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition flex items-center justify-center gap-2 w-full md:w-auto">
-          <i class="fa-solid fa-file-csv"></i> Baixar CSV
-        </button>
+        <!-- Submenu de Filtros Rápidos (Acesso com 1 clique) -->
+        <div class="pt-2 border-t border-black/5 flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 text-xs text-stone-400 font-semibold uppercase tracking-wider mr-1">
+            <i class="fa-solid fa-bolt text-[#C5A059] text-[11px]"></i>
+            <span class="text-[10px]">Filtros Rápidos:</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 flex-1">
+            <button type="button" onclick="applyQuickFilter('recentes')" id="pill-recentes" class="quick-pill active px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais novos no topo (ordem padrão)">
+              <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Mais Novos
+            </button>
+            <button type="button" onclick="applyQuickFilter('antigos')" id="pill-antigos" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Mais antigos no topo">
+              <i class="fa-solid fa-arrow-up-wide-short text-[10px]"></i> Mais Antigos
+            </button>
+            <button type="button" onclick="applyQuickFilter('cliente_az')" id="pill-cliente_az" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Ordem alfabética de Clientes">
+              <i class="fa-solid fa-arrow-down-a-z text-[10px]"></i> Cliente (A-Z)
+            </button>
+            <button type="button" onclick="applyQuickFilter('pendentes')" id="pill-pendentes" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Filtrar pendências / a receber">
+              <i class="fa-solid fa-circle-exclamation text-amber-500 text-[10px]"></i> A Receber
+            </button>
+            <button type="button" onclick="applyQuickFilter('maior_valor')" id="pill-maior_valor" class="quick-pill px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5" title="Maiores valores no topo">
+              <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Maior Valor
+            </button>
+          </div>
+          <span id="active-sort-indicator" class="text-[11px] text-[#C5A059] font-medium hidden sm:inline-block">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> Mais novos primeiro
+          </span>
+        </div>
       </div>
 
       <!-- Modo Desktop: Tabela Luxo de Atendimentos -->
@@ -454,15 +489,55 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left lux-table">
             <thead class="bg-stone-50 border-b border-black/5">
-              <tr>
-                <th class="whitespace-nowrap">Data</th>
-                <th class="whitespace-nowrap">Cliente</th>
-                <th class="whitespace-nowrap" id="th-servico-atendimentos">Serviço</th>
-                <th class="whitespace-nowrap" title="Valor Total do Procedimento">Total</th>
-                <th class="whitespace-nowrap" title="Sinal + Restante Recebidos">Recebido</th>
-                <th class="whitespace-nowrap" title="Saldo a Receber">A Receber</th>
-                <th class="whitespace-nowrap">Pagamento</th>
-                <th class="whitespace-nowrap">Situação</th>
+              <tr id="thead-tr-atendimentos">
+                <th class="sortable-th whitespace-nowrap active-sort" onclick="toggleSortAtendimentos('data')" id="th-sort-data" title="Clique para ordenar por Data (Mais novos ou mais antigos)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Data</span>
+                    <i id="sort-icon-data" class="fa-solid fa-arrow-down-wide-short text-[#C5A059] text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('cliente')" id="th-sort-cliente" title="Clique para ordenar por Cliente (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Cliente</span>
+                    <i id="sort-icon-cliente" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('servico')" id="th-sort-servico" title="Clique para ordenar por Procedimento (A-Z ou Z-A)">
+                  <div class="flex items-center gap-1.5">
+                    <span id="th-servico-atendimentos">Procedimento</span>
+                    <i id="sort-icon-servico" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('valorTotal')" id="th-sort-valorTotal" title="Clique para ordenar por Valor Total (Maior ou menor)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Valor Total</span>
+                    <i id="sort-icon-valorTotal" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('recebido')" id="th-sort-recebido" title="Clique para ordenar por Valor Recebido (Sinal + Restante)">
+                  <div class="flex items-center gap-1.5">
+                    <span>Recebido</span>
+                    <i id="sort-icon-recebido" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('aReceber')" id="th-sort-aReceber" title="Clique para ordenar por Saldo A Receber (Pendências)">
+                  <div class="flex items-center gap-1.5">
+                    <span>A Receber</span>
+                    <i id="sort-icon-aReceber" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('formaPagamento')" id="th-sort-formaPagamento" title="Clique para ordenar por Forma de Pagamento">
+                  <div class="flex items-center gap-1.5">
+                    <span>Pagamento</span>
+                    <i id="sort-icon-formaPagamento" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
+                <th class="sortable-th whitespace-nowrap" onclick="toggleSortAtendimentos('situacao')" id="th-sort-situacao" title="Clique para agrupar por Situação">
+                  <div class="flex items-center gap-1.5">
+                    <span>Situação</span>
+                    <i id="sort-icon-situacao" class="fa-solid fa-sort text-gray-300 text-[11px]"></i>
+                  </div>
+                </th>
                 <th class="text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
@@ -935,7 +1010,7 @@
   <!-- ====================================================================
        RODAPÉ EXECUTIVO & PROFISSIONAL
        ==================================================================== -->
-  <footer class="bg-[#1A1A1A] text-stone-300 border-t border-[#D4888C]/25 mt-20 pt-12 pb-8 shadow-2xl relative">
+  <footer class="bg-[#1A1A1A] text-stone-300 border-t border-[#D4888C]/25 mt-20 pt-12 pb-28 sm:pb-24 shadow-2xl relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Linha Principal do Rodapé (3 Colunas) -->
@@ -1497,11 +1572,48 @@
 
 
 
+  <!-- Barra Flutuante de Aviso (Estilo Cookies): Modo Demonstração (Sem Login) -->
+  <div id="demo-mode-bottom-bar" class="fixed bottom-0 inset-x-0 z-40 bg-[#141414]/95 backdrop-blur-md border-t border-[#D4888C]/40 shadow-[0_-10px_35px_rgba(0,0,0,0.7)] px-4 py-3 sm:py-3.5 transition-all duration-300 transform translate-y-full hidden">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6">
+      
+      <!-- Lado Esquerdo: Ícone + Textos Claros -->
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <div class="w-10 h-10 rounded-xl bg-[#D4888C]/15 border border-[#D4888C]/30 flex items-center justify-center text-[#E8A5A8] text-lg shrink-0">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div class="text-left flex-1 sm:flex-initial">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#D4888C]/20 text-[#E8A5A8] border border-[#D4888C]/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#D4888C] animate-pulse"></span>
+              Modo Teste / Demonstração
+            </span>
+            <span class="text-xs font-semibold text-white">Sem login ativo</span>
+          </div>
+          <p class="text-xs text-stone-300 mt-0.5 leading-snug">
+            Você pode testar tudo livremente! O envio e remoção no banco estão <strong class="text-white font-semibold">bloqueados</strong> — tudo fica salvo apenas neste computador.
+          </p>
+        </div>
+      </div>
+
+      <!-- Lado Direito: Ações (Botão Entrar / Cadastrar + Continuar Testando) -->
+      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end shrink-0">
+        <button onclick="dismissDemoBanner()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-stone-400 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5" title="Continuar testando sem login">
+          <span>Continuar Testando</span>
+        </button>
+        <button onclick="openAuthModal()" class="lux-btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-lg hover:shadow-[#D4888C]/20 transition transform active:scale-95 whitespace-nowrap">
+          <i class="fa-solid fa-user-lock"></i>
+          <span>Entrar / Criar Conta</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Container de Notificações Toast -->
-  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <div id="toast-container" class="fixed bottom-24 sm:bottom-20 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm sm:max-w-md"></div>
 
   <!-- Script da Aplicação com Versão (Cache Busting) -->
-  <script src="./app.js?v=1.3.2"></script>
+  <script src="./app.js?v=1.3.4"></script>
 </body>
 
 </html>
