@@ -5,8 +5,8 @@
  * ==============================================================================
  */
 
-// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Supabase Auth + Persistência de Abas)
-const APP_VERSION = '1.3.4';
+// Versão da Aplicação (Atualizada para Cache Busting - Edição Modular SaaS + Ordenação e Filtros Rápidos)
+const APP_VERSION = '1.3.5';
 
 // ==============================================================================
 // PRESETS E ARQUITETURA MODULAR (SAAS UNIVERSAL)
@@ -612,7 +612,12 @@ function submitAddCatalogoItem(e) {
   closeModal('modal-add-catalogo');
   renderCatalogoTable();
   populateProcedimentosSelect();
-  showToast(`Serviço "${nome}" adicionado com sucesso!`);
+  if (state.currentUser) {
+    showToast(`Serviço "${nome}" adicionado com sucesso!`);
+  } else {
+    showToast(`Serviço "${nome}" adicionado localmente (Modo Teste). Faça login para salvar na nuvem!`, 'info');
+    revealDemoBanner();
+  }
 
   // Se logado no Supabase, adiciona no catálogo na nuvem
   if (state.currentUser && state.supabaseClient) {
@@ -636,7 +641,12 @@ function removeCatalogoItem(idx) {
   renderCatalogoTable();
   populateProcedimentosSelect();
   if (removed.length > 0) {
-    showToast(`"${removed[0].nome}" removido do catálogo.`);
+    if (state.currentUser) {
+      showToast(`"${removed[0].nome}" removido do catálogo.`);
+    } else {
+      showToast(`"${removed[0].nome}" removido localmente (Modo Teste). Faça login para salvar na nuvem!`, 'info');
+      revealDemoBanner();
+    }
 
     // Se logado no Supabase e item tem id, remove da nuvem
     if (state.currentUser && state.supabaseClient && removed[0].id) {
@@ -2847,11 +2857,21 @@ async function submitAtendimento(event) {
       normalized._id = state.data.atendimentos[targetIdx]._id;
       state.data.atendimentos[targetIdx] = normalized;
     }
-    showToast('Atendimento atualizado com sucesso!');
+    if (state.currentUser) {
+      showToast('Atendimento atualizado com sucesso!');
+    } else {
+      showToast('Item atualizado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   } else {
     normalized._rowIndex = 2;
     state.data.atendimentos.unshift(normalized);
-    showToast('Atendimento registrado com sucesso!');
+    if (state.currentUser) {
+      showToast('Atendimento registrado com sucesso!');
+    } else {
+      showToast('Item adicionado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   }
 
   // Persistência: Supabase Nuvem ou Google Sheets
@@ -2917,9 +2937,15 @@ function openNewDespesa() {
   openModal('modal-nova-despesa');
 }
 
-function openEditDespesa(listIndex) {
-  const list = filterByPeriod(state.data.despesas || []);
-  const item = list[listIndex];
+function openEditDespesa(keyOrIndex) {
+  let item = (state.data.despesas || []).find(d => 
+    (d._id && String(d._id) === String(keyOrIndex)) || 
+    (d._rowIndex && String(d._rowIndex) === String(keyOrIndex))
+  );
+  if (!item) {
+    const list = filterByPeriod(state.data.despesas || []);
+    item = list[keyOrIndex];
+  }
   if (!item) return;
 
   document.getElementById('modal-desp-rowindex').value = item._rowIndex;
@@ -2968,11 +2994,21 @@ async function submitDespesa(event) {
       normalized._id = state.data.despesas[targetIdx]._id;
       state.data.despesas[targetIdx] = normalized;
     }
-    showToast('Despesa atualizada com sucesso!');
+    if (state.currentUser) {
+      showToast('Despesa atualizada com sucesso!');
+    } else {
+      showToast('Item atualizado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   } else {
     normalized._rowIndex = 2;
     state.data.despesas.unshift(normalized);
-    showToast('Despesa registrada com sucesso!');
+    if (state.currentUser) {
+      showToast('Despesa registrada com sucesso!');
+    } else {
+      showToast('Item adicionado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   }
 
   // Persistência: Supabase Nuvem ou Google Sheets
@@ -3030,9 +3066,15 @@ function openNewReceitaExtra() {
   openModal('modal-nova-receita-extra');
 }
 
-function openEditReceitaExtra(listIndex) {
-  const list = filterByPeriod(state.data.outros || []);
-  const item = list[listIndex];
+function openEditReceitaExtra(keyOrIndex) {
+  let item = (state.data.outros || []).find(o => 
+    (o._id && String(o._id) === String(keyOrIndex)) || 
+    (o._rowIndex && String(o._rowIndex) === String(keyOrIndex))
+  );
+  if (!item) {
+    const list = filterByPeriod(state.data.outros || []);
+    item = list[keyOrIndex];
+  }
   if (!item) return;
 
   document.getElementById('modal-extra-rowindex').value = item._rowIndex;
@@ -3072,11 +3114,21 @@ async function submitReceitaExtra(event) {
       normalized._id = state.data.outros[targetIdx]._id;
       state.data.outros[targetIdx] = normalized;
     }
-    showToast('Receita extra atualizada!');
+    if (state.currentUser) {
+      showToast('Receita extra atualizada!');
+    } else {
+      showToast('Item atualizado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   } else {
     normalized._rowIndex = 2;
     state.data.outros.unshift(normalized);
-    showToast('Receita extra registrada com sucesso!');
+    if (state.currentUser) {
+      showToast('Receita extra registrada com sucesso!');
+    } else {
+      showToast('Item adicionado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   }
 
   // Persistência: Supabase Nuvem ou Google Sheets
@@ -3133,9 +3185,15 @@ function openNewPessoal() {
   openModal('modal-novo-pessoal');
 }
 
-function openEditPessoal(listIndex) {
-  const list = filterByPeriod(state.data.pessoal || []);
-  const item = list[listIndex];
+function openEditPessoal(keyOrIndex) {
+  let item = (state.data.pessoal || []).find(p => 
+    (p._id && String(p._id) === String(keyOrIndex)) || 
+    (p._rowIndex && String(p._rowIndex) === String(keyOrIndex))
+  );
+  if (!item) {
+    const list = filterByPeriod(state.data.pessoal || []);
+    item = list[keyOrIndex];
+  }
   if (!item) return;
 
   document.getElementById('modal-pess-rowindex').value = item._rowIndex;
@@ -3181,11 +3239,21 @@ async function submitPessoal(event) {
       normalized._id = state.data.pessoal[targetIdx]._id;
       state.data.pessoal[targetIdx] = normalized;
     }
-    showToast('Lançamento pessoal atualizado!');
+    if (state.currentUser) {
+      showToast('Lançamento pessoal atualizado!');
+    } else {
+      showToast('Item atualizado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   } else {
     normalized._rowIndex = 2;
     state.data.pessoal.unshift(normalized);
-    showToast('Lançamento pessoal registrado!');
+    if (state.currentUser) {
+      showToast('Lançamento pessoal registrado!');
+    } else {
+      showToast('Item adicionado localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
   }
 
   // Persistência: Supabase Nuvem ou Google Sheets
@@ -3252,7 +3320,12 @@ async function submitProLabore(event) {
   saveLocalCache();
   closeModal('modal-pro-labore');
   renderAll();
-  showToast(`Pró-labore de ${formatBRL(valor)} transferido com sucesso!`);
+  if (state.currentUser) {
+    showToast(`Pró-labore de ${formatBRL(valor)} transferido com sucesso!`);
+  } else {
+    showToast('Pró-labore transferido localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+    revealDemoBanner();
+  }
 
   if (state.currentUser && state.supabaseClient) {
     state.supabaseClient.from('financas_pessoais').insert({
@@ -3286,7 +3359,12 @@ function submitMetas(event) {
   state.data.metas = { faturamento, reserva, limitePessoal };
   saveLocalCache();
   renderKPIs();
-  showToast('Metas financeiras salvas com sucesso!');
+  if (state.currentUser) {
+    showToast('Metas financeiras salvas com sucesso!');
+  } else {
+    showToast('Metas salvas localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+    revealDemoBanner();
+  }
 
   if (state.currentUser && state.supabaseClient) {
     state.supabaseClient.from('metas').upsert({
@@ -3316,7 +3394,12 @@ function deleteItem(sheetType, rowIndex) {
     list.splice(targetIndex, 1);
     saveLocalCache();
     renderAll();
-    showToast('Item excluído!');
+    if (state.currentUser) {
+      showToast('Item excluído!');
+    } else {
+      showToast('Item removido localmente (Modo Teste). Faça login para salvar na nuvem!', 'info');
+      revealDemoBanner();
+    }
 
     // Se estiver logado no Supabase, exclui na nuvem
     if (state.currentUser && state.supabaseClient && (removedItem?._id || removedItem?.id)) {
@@ -3458,10 +3541,20 @@ function saveLocalCache() {
   localStorage.setItem('bia_fin_data', JSON.stringify(state.data));
 }
 
-// Notificação Flutuante (Toast)
+// Notificação Flutuante (Toast - Mantém apenas uma mensagem ativa sem empilhar)
+let activeToastTimeout = null;
+let activeToastRemoveTimeout = null;
+
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
+
+  // Limpa timeouts da notificação anterior
+  if (activeToastTimeout) clearTimeout(activeToastTimeout);
+  if (activeToastRemoveTimeout) clearTimeout(activeToastRemoveTimeout);
+
+  // Remove qualquer toast anterior imediatamente para garantir apenas uma mensagem na tela
+  container.innerHTML = '';
 
   const toast = document.createElement('div');
   let bgColor = 'bg-[#1A1A1A] text-white border border-[#D4888C]/30';
@@ -3475,17 +3568,30 @@ function showToast(message, type = 'success') {
     icon = 'fa-cloud-arrow-up text-[#E8A5A8]';
   }
   
-  toast.className = `${bgColor} px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-medium animate-fade-in transition-all`;
+  toast.className = `${bgColor} px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm font-medium animate-fade-in transition-all duration-300 pointer-events-auto cursor-pointer`;
+  toast.title = 'Clique para fechar';
   toast.innerHTML = `
     <i class="fa-solid ${icon} text-sm sm:text-base shrink-0"></i>
     <span class="leading-snug">${message}</span>
   `;
 
-  container.appendChild(toast);
-  const duration = type === 'info' ? 5000 : 3500;
-  setTimeout(() => {
+  // Permite fechar clicando na notificação
+  toast.onclick = () => {
     toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 400);
+    toast.style.transform = 'translateY(6px)';
+    setTimeout(() => {
+      if (toast.parentElement) toast.remove();
+    }, 250);
+  };
+
+  container.appendChild(toast);
+  const duration = type === 'info' ? 4500 : 3000;
+  activeToastTimeout = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(6px)';
+    activeToastRemoveTimeout = setTimeout(() => {
+      if (toast.parentElement) toast.remove();
+    }, 350);
   }, duration);
 }
 
