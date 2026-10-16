@@ -840,10 +840,17 @@ async function loadUserDataFromSupabase(user) {
       .maybeSingle();
 
     if (perfil) {
+      let appName = perfil.app_name || 'Meu Painel Financeiro';
+      if (appName === 'Beatriz Leal Beauty') {
+        appName = 'Studio de Estética & Beleza';
+        // Atualiza no banco silenciosamente para limpar o registro legado do usuário
+        state.supabaseClient.from('perfis').update({ app_name: appName }).eq('id', user.id).then();
+      }
+
       state.config = {
         id: perfil.tipo_perfil || 'personalizado',
         nomePerfil: perfil.nome || user.user_metadata?.nome || 'Meu Espaço',
-        appName: perfil.app_name || 'Meu Painel Financeiro',
+        appName: appName,
         appSubtitle: perfil.app_subtitle || 'Gestão Financeira & Caixa',
         logoIcon: perfil.logo_icon || 'fa-sparkles',
         preset: perfil.tipo_perfil || 'personalizado',
@@ -2996,7 +3003,7 @@ function exportDataCSV() {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `Financeiro_BiaLeal_${state.selectedYear}_${state.selectedMonth}.csv`);
+  link.setAttribute('download', `Financeiro_${state.selectedYear}_${state.selectedMonth}.csv`);
   document.body.appendChild(link);
   link.click();
   link.remove();
